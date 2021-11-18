@@ -1,9 +1,13 @@
 // Main.cpp
+#include <cstdlib>
+#include <ctime>
 #include "System.h"
 #include "App1.h"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
 {
+	std::srand(std::time(nullptr));	// Seed the pseudo RNG
+
 	App1* app = new App1();
 	System* system;
 

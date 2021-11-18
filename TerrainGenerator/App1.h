@@ -26,14 +26,22 @@ protected:
 
 private:
 	// Init functions
+	void initGUIToggles();
 	void loadTextures();
 	void initTerrain();
 	void initLightShader(HWND& hwnd);
 	void initLights();
 	void initDirLight();
 	void initCam();
+	void initGUIVars();
+
+	// Terrain Options
+	void updateTerrain();
+	void checkFaulting();
 
 	// Render functions
+	void buildAllGuiOptions();
+	void buildFaultingGui();
 	void renderTerrain();
 
 	// Terrain objects
@@ -41,6 +49,13 @@ private:
 	LightShader* lightShader;
 	Light* dirLight;
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
+
+	// GUI bools
+	bool loopFaulting;
+	bool runFaultingIterations;
+
+	// GUI vals
+	int faultingIetrations;
 
 };
 

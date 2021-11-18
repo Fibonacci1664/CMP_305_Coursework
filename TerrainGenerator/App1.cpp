@@ -25,6 +25,9 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 
 	// Initialise camera
 	initCam();
+
+	// Init all the variables used by the GUI
+	initGUIVars();
 }
 
 App1::~App1()
@@ -51,6 +54,32 @@ App1::~App1()
 	}
 }
 
+void App1::updateTerrain()
+{
+	checkFaulting();
+}
+
+void App1::checkFaulting()
+{
+	if (loopFaulting)
+	{
+		terrainMesh->generateFault();
+		terrainMesh->regenerateTerrain();
+	}
+	else if (runFaultingIterations && faultingIetrations > 0)
+	{
+		terrainMesh->generateFault();
+		terrainMesh->regenerateTerrain();
+
+		--faultingIetrations;
+
+		if (faultingIetrations == 0)
+		{
+			runFaultingIterations = false;
+		}
+	}
+}
+
 bool App1::frame()
 {
 	bool result;
@@ -61,6 +90,8 @@ bool App1::frame()
 	{
 		return false;
 	}
+
+	updateTerrain();
 	
 	// Render the graphics.
 	result = render();
@@ -105,14 +136,30 @@ void App1::gui()
 	renderer->getDeviceContext()->HSSetShader(NULL, NULL, 0);
 	renderer->getDeviceContext()->DSSetShader(NULL, NULL, 0);
 
+	ImGui::ShowDemoWindow();
+
 	// Build UI
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Text("Camera Pos: (%.2f, %.2f, %.2f)", camera->getPosition().x, camera->getPosition().y, camera->getPosition().z);
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
 
+	buildAllGuiOptions();
+
+	// Get a brand new flat terrain
+	if (ImGui::Button("Reset Terrain"))
+	{
+		terrainMesh->resetTerrain();
+		terrainMesh->regenerateTerrain();
+	}
+
 	// Render UI
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+}
+
+void App1::initGUIToggles()
+{
+	loopFaulting = false;
 }
 
 void App1::loadTextures()
@@ -148,6 +195,76 @@ void App1::initCam()
 {
 	camera->setPosition(-16, 60, -15);
 	camera->setRotation(25, 45, 0);
+}
+
+void App1::initGUIVars()
+{
+	// Bools
+	loopFaulting = false;
+
+	// Ints
+	faultingIetrations = 0;
+
+	// Floats
+
+}
+
+void App1::buildAllGuiOptions()
+{
+	buildFaultingGui();
+}
+
+void App1::buildFaultingGui()
+{
+	if (ImGui::TreeNode("Faulting"))
+	{
+		if (ImGui::Button("Add Single Fault"))
+		{
+			terrainMesh->generateFault();
+			terrainMesh->regenerateTerrain();
+		}
+
+		ImGui::Text("Loop Faulting");
+
+		// These radio buttons will loop the faulting algorithm indefinately until switched OFF again
+		// If switched to the ON state while running an amount of set iterations
+		// the iterations slider will move into a pause state
+		static int state = 0;
+
+		ImGui::RadioButton("Off", &state, 0); ImGui::SameLine(); ImGui::RadioButton("On", &state, 1);
+		
+		if (state)
+		{
+			loopFaulting = true;
+		}
+		else
+		{
+			loopFaulting = false;
+		}
+
+		// This slider lets the user control how many iterations of the faulting algorithm they wish to run
+		ImGui::SliderInt("Faulting Iterations", &faultingIetrations, 2, 1000);
+		
+		if (ImGui::Button("Run All Iterations"))
+		{										
+			if (!loopFaulting)					
+			{
+				runFaultingIterations = true;
+			}
+			else
+			{
+				runFaultingIterations = false;
+			}
+		}
+
+		// Manually pause the set iterations
+		if (ImGui::Button("Pause"))
+		{
+			runFaultingIterations = false;
+		}
+
+		ImGui::TreePop();
+	}
 }
 
 void App1::renderTerrain()

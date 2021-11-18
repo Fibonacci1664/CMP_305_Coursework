@@ -1,19 +1,45 @@
 #include "Terrain.h"
 
 Terrain::Terrain(ID3D11Device* device, ID3D11DeviceContext* deviceContext, int resolution) :
-	PlaneMesh(device, deviceContext, resolution)
+	PlaneMesh(device, deviceContext, resolution), m_device(device), m_deviceContext(deviceContext)
 {
 	initTerrain(resolution, device, deviceContext);
 }
 
 Terrain::~Terrain()
 {
+	delete[] heightMap;
+	heightMap = 0;
+
+	if (faulting)
+	{
+		delete faulting;
+		faulting = nullptr;
+	}
+}
+
+void Terrain::regenerateTerrain()
+{
+	generateTerrain(m_device, m_deviceContext);
+}
+
+void Terrain::resetTerrain()
+{
+	newTerrain = true;
 }
 
 void Terrain::initTerrain(int& resolution, ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 {
+	newTerrain = true;
+
 	resize(resolution);
 	generateTerrain(device, deviceContext);
+	initTerrainObjects();
+}
+
+void Terrain::initTerrainObjects()
+{
+	faulting = new Faulting(resolution, heightMap);
 }
 
 void Terrain::resize(int& newResolution)
@@ -40,7 +66,11 @@ void Terrain::generateTerrain(ID3D11Device* device, ID3D11DeviceContext* deviceC
 	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData, indexData;
 
-	buildTerrain();
+	if (newTerrain)
+	{
+		buildTerrain();
+		newTerrain = false;
+	}
 
 	// Calculate the number of vertices in the terrain mesh.
 	// We share vertices in this mesh, so the vertex count is simply the terrain 'resolution'
@@ -228,16 +258,13 @@ void Terrain::buildTerrain()
 {
 	float height = 0.0f;
 
-	//Scale everything so that the look is consistent across terrain resolutions
+	// Scale everything so that the look is consistent across terrain resolutions
 	const float scale = terrainSize / (float)resolution;
 
-	//TODO: Give some meaning to these magic numbers! What effect does changing them have on terrain?
 	for (int j = 0; j < (resolution); j++)
 	{
 		for (int i = 0; i < (resolution); i++)
 		{
-			height = (sin((float)i * 0.1f * scale)) * 10.0f;
-			height += (cos((float)j * 0.033f * scale + 1.0f)) * 10.0f;
 			heightMap[(j * resolution) + i] = height;
 		}
 	}
@@ -279,7 +306,9 @@ void Terrain::createBuffers(ID3D11Device* device, VertexType* vertices, unsigned
 	device->CreateBuffer(&indexBufferDesc, &indexData, &indexBuffer);
 }
 
-void Terrain::generateFullTerrain()
-{
+// ###################### GENERATE TERRAIN EFFECTS ######################
 
+void Terrain::generateFault()
+{
+	faulting->createFault();
 }
