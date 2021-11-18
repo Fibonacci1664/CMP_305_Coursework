@@ -20,20 +20,35 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App1.cpp" />
+    <ClCompile Include="Faulting.cpp" />
+    <ClCompile Include="ImprovedPerlin.cpp" />
     <ClCompile Include="LightShader.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="OldPerlinNoise.cpp" />
+    <ClCompile Include="Terrain.cpp" />
+    <ClCompile Include="TerrainMesh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h" />
+    <ClInclude Include="Faulting.h" />
+    <ClInclude Include="ImprovedPerlin.h" />
     <ClInclude Include="LightShader.h" />
+    <ClInclude Include="Line.h" />
+    <ClInclude Include="OldPerlinNoise.h" />
+    <ClInclude Include="Terrain.h" />
+    <ClInclude Include="TerrainMesh.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\light_ps.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="shaders\light_vs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
   </ItemGroup>
@@ -143,6 +158,9 @@
       <AdditionalLibraryDirectories>$(SolutionDir)\lib\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>d3d11.lib;DXFramework.lib;dxgi.lib;D3DCompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <FxCompile>
+      <ObjectFileOutput>$(Directory)%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>

@@ -7,10 +7,10 @@
   </ProjectOutputs>
   <ContentFiles>
     <ContentFile>
-      <FullPath>D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\x64\Debug\light_ps.cso</FullPath>
+      <FullPath>D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\TerrainGenerator\light_ps.cso</FullPath>
     </ContentFile>
     <ContentFile>
-      <FullPath>D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\x64\Debug\light_vs.cso</FullPath>
+      <FullPath>D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\TerrainGenerator\light_vs.cso</FullPath>
     </ContentFile>
   </ContentFiles>
   <SatelliteDlls />

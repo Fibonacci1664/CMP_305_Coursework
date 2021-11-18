@@ -5,6 +5,8 @@
 // Includes
 #include "DXF.h"	// include dxframework
 #include <memory>
+#include "Terrain.h"
+#include "LightShader.h"
 
 using std::unique_ptr;
 
@@ -23,6 +25,23 @@ protected:
 	void gui();
 
 private:
+	// Init functions
+	void loadTextures();
+	void initTerrain();
+	void initLightShader(HWND& hwnd);
+	void initLights();
+	void initDirLight();
+	void initCam();
+
+	// Render functions
+	void renderTerrain();
+
+	// Terrain objects
+	Terrain* terrainMesh;
+	LightShader* lightShader;
+	Light* dirLight;
+	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
+
 };
 
 #endif

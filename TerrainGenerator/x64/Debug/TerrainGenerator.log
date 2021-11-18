@@ -1,5 +1,2 @@
-﻿  App1.cpp
-DXFramework.lib(WICTextureLoader.obj) : warning LNK4099: PDB 'DirectXTK.pdb' was not found with 'DXFramework.lib(WICTextureLoader.obj)' or at 'D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\x64\Debug\DirectXTK.pdb'; linking object as if no debug info
-DXFramework.lib(pch.obj) : warning LNK4099: PDB 'DirectXTK.pdb' was not found with 'DXFramework.lib(pch.obj)' or at 'D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\x64\Debug\DirectXTK.pdb'; linking object as if no debug info
-DXFramework.lib(DDSTextureLoader.obj) : warning LNK4099: PDB 'DirectXTK.pdb' was not found with 'DXFramework.lib(DDSTextureLoader.obj)' or at 'D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\x64\Debug\DirectXTK.pdb'; linking object as if no debug info
+﻿  compilation object save succeeded; see D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\TerrainGenerator\light_ps.cso
   TerrainGenerator.vcxproj -> D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\x64\Debug\TerrainGenerator.exe

@@ -5,7 +5,6 @@ LightShader::LightShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, h
 	initShader(L"light_vs.cso", L"light_ps.cso");
 }
 
-
 LightShader::~LightShader()
 {
 	// Release the sampler state.
@@ -85,14 +84,20 @@ void LightShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilenam
 }
 
 
-void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix, ID3D11ShaderResourceView* texture, Light* light)
+void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
+	const XMMATRIX &worldMatrix,
+	const XMMATRIX &viewMatrix,
+	const XMMATRIX &projectionMatrix,
+	ID3D11ShaderResourceView* texture1,
+	/*ID3D11ShaderResourceView* texture2,
+	ID3D11ShaderResourceView* texture3,*/
+	Light* light)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
 	
 	XMMATRIX tworld, tview, tproj;
-
 
 	// Transpose the matrices to prepare them for the shader.
 	tworld = XMMatrixTranspose(worldMatrix);
@@ -118,6 +123,8 @@ void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const 
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
 
 	// Set shader texture resource in the pixel shader.
-	deviceContext->PSSetShaderResources(0, 1, &texture);
+	deviceContext->PSSetShaderResources(0, 1, &texture1);
+	/*deviceContext->PSSetShaderResources(1, 1, &texture2);
+	deviceContext->PSSetShaderResources(2, 1, &texture3);*/
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
 }

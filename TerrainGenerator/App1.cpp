@@ -1,5 +1,6 @@
 #include "App1.h"
 #include <vector>
+
 App1::App1()
 {
 	
@@ -11,27 +12,44 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
 	// Load textures
-	textureMgr->loadTexture(L"brick", L"resources/textures/snow.png");
-	textureMgr->loadTexture(L"grass", L"resources/textures/grass.png");
+	loadTextures();
+	
+	// Create Mesh objects
+	initTerrain();
 
-	// Create Mesh object and shader object
-
+	// Create shader objects
+	initLightShader(hwnd);
 
 	// Initialise light
+	initLights();
 
-
-	//Initialise Camera Position
-	camera->setPosition(-16, 60, -15);
-	camera->setRotation(25, 45, 0);
+	// Initialise camera
+	initCam();
 }
-
 
 App1::~App1()
 {
 	// Run base application deconstructor
 	BaseApplication::~BaseApplication();
-}
 
+	if (terrainMesh)
+	{
+		delete terrainMesh;
+		terrainMesh = nullptr;
+	}
+
+	if (lightShader)
+	{
+		delete lightShader;
+		lightShader = nullptr;
+	}
+
+	if (dirLight)
+	{
+		delete dirLight;
+		dirLight = nullptr;
+	}
+}
 
 bool App1::frame()
 {
@@ -57,8 +75,6 @@ bool App1::frame()
 
 bool App1::render()
 {
-	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
-
 	// Clear the scene. (default blue colour)
 	renderer->beginScene(0.39f, 0.58f, 0.92f, 1.0f);
 
@@ -71,7 +87,8 @@ bool App1::render()
 	projectionMatrix = renderer->getProjectionMatrix();
 
 	// Send geometry data, set shader parameters, render object with shader
-	
+	renderTerrain();
+
 	// Render GUI
 	gui();
 
@@ -98,3 +115,52 @@ void App1::gui()
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 }
 
+void App1::loadTextures()
+{
+	textureMgr->loadTexture(L"brick", L"resources/textures/snow.png");
+	textureMgr->loadTexture(L"grass", L"resources/textures/grass.png");
+}
+
+void App1::initTerrain()
+{
+	terrainMesh = new Terrain(renderer->getDevice(), renderer->getDeviceContext());
+}
+
+void App1::initLightShader(HWND& hwnd)
+{
+	lightShader = new LightShader(renderer->getDevice(), hwnd);
+}
+
+void App1::initLights()
+{
+	initDirLight();
+}
+
+void App1::initDirLight()
+{
+	dirLight = new Light();
+	dirLight->setAmbientColour(0.2f, 0.2f, 0.2f, 1.0f);
+	dirLight->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
+	dirLight->setDirection(0.7f, -0.7f, 0.0f);
+}
+
+void App1::initCam()
+{
+	camera->setPosition(-16, 60, -15);
+	camera->setRotation(25, 45, 0);
+}
+
+void App1::renderTerrain()
+{
+	// Add these later
+	//textureMgr->getTexture(L"grass"), textureMgr->getTexture(L"snow"),
+
+	terrainMesh->sendData(renderer->getDeviceContext());
+
+	lightShader->setShaderParameters(renderer->getDeviceContext(),
+		worldMatrix, viewMatrix, projectionMatrix,
+		textureMgr->getTexture(L"grass"),
+		dirLight);
+
+	lightShader->render(renderer->getDeviceContext(), terrainMesh->getIndexCount());
+}

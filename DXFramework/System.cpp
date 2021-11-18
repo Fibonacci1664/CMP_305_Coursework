@@ -17,7 +17,6 @@ System::System(BaseApplication* application, int screenWidth, int screenHeight, 
 
 	app = application;
 	app->init(hinstance, hwnd, rect.right, rect.bottom, &input, VSYNC, FULL_SCREEN);
-
 }
 
 // Release resources.
@@ -44,6 +43,7 @@ void System::run()
 
 	// Loop until there is a quit message from the window or the user.
 	done = false;
+
 	while (!done)
 	{
 		// Handle the windows messages.
@@ -67,6 +67,7 @@ void System::run()
 			//{
 				// Otherwise do the frame processing.
 				result = frame();
+
 				if (!result)
 				{
 					done = true;
@@ -75,6 +76,7 @@ void System::run()
 		}
 
 	}
+
 	PostQuitMessage(0);
 	return;
 }
