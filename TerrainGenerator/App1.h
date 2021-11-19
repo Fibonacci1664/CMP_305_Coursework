@@ -38,10 +38,12 @@ private:
 	// Terrain Options
 	void updateTerrain();
 	void checkFaulting();
+	void checkParticleDepo();
 
 	// Render functions
 	void buildAllGuiOptions();
 	void buildFaultingGui();
+	void buildParticleDepoGui();
 	void renderTerrain();
 
 	// Terrain objects
@@ -53,9 +55,12 @@ private:
 	// GUI bools
 	bool loopFaulting;
 	bool runFaultingIterations;
+	bool loopParticleDepo;
+	bool runParticleDepoIterations;
 
 	// GUI vals
 	int faultingIetrations;
+	int particleDepoIterations;
 
 };
 

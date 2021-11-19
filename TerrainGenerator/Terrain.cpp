@@ -16,6 +16,12 @@ Terrain::~Terrain()
 		delete faulting;
 		faulting = nullptr;
 	}
+
+	if (particleDepo)
+	{
+		delete particleDepo;
+		particleDepo = nullptr;
+	}
 }
 
 void Terrain::regenerateTerrain()
@@ -40,6 +46,7 @@ void Terrain::initTerrain(int& resolution, ID3D11Device* device, ID3D11DeviceCon
 void Terrain::initTerrainObjects()
 {
 	faulting = new Faulting(resolution, heightMap);
+	particleDepo = new ParticleDeposition(resolution, heightMap);
 }
 
 void Terrain::resize(int& newResolution)
@@ -311,4 +318,9 @@ void Terrain::createBuffers(ID3D11Device* device, VertexType* vertices, unsigned
 void Terrain::generateFault()
 {
 	faulting->createFault();
+}
+
+void Terrain::startParticleDepo()
+{
+	particleDepo->runParticleDepo();
 }

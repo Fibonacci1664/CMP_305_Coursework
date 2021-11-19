@@ -57,6 +57,7 @@ App1::~App1()
 void App1::updateTerrain()
 {
 	checkFaulting();
+	checkParticleDepo();
 }
 
 void App1::checkFaulting()
@@ -76,6 +77,27 @@ void App1::checkFaulting()
 		if (faultingIetrations == 0)
 		{
 			runFaultingIterations = false;
+		}
+	}
+}
+
+void App1::checkParticleDepo()
+{
+	if (loopParticleDepo)
+	{
+		terrainMesh->startParticleDepo();
+		terrainMesh->regenerateTerrain();
+	}
+	else if (runParticleDepoIterations && particleDepoIterations > 0)
+	{
+		terrainMesh->startParticleDepo();
+		terrainMesh->regenerateTerrain();
+
+		--particleDepoIterations;
+
+		if (particleDepoIterations == 0)
+		{
+			runParticleDepoIterations = false;
 		}
 	}
 }
@@ -201,9 +223,14 @@ void App1::initGUIVars()
 {
 	// Bools
 	loopFaulting = false;
+	runFaultingIterations = false;
+	loopParticleDepo = false;
+	runParticleDepoIterations = false;
+
 
 	// Ints
 	faultingIetrations = 0;
+	particleDepoIterations = 0;
 
 	// Floats
 
@@ -212,6 +239,7 @@ void App1::initGUIVars()
 void App1::buildAllGuiOptions()
 {
 	buildFaultingGui();
+	buildParticleDepoGui();
 }
 
 void App1::buildFaultingGui()
@@ -261,6 +289,59 @@ void App1::buildFaultingGui()
 		if (ImGui::Button("Pause"))
 		{
 			runFaultingIterations = false;
+		}
+
+		ImGui::TreePop();
+	}
+}
+
+void App1::buildParticleDepoGui()
+{
+	if (ImGui::TreeNode("Particle Deposition"))
+	{
+		if (ImGui::Button("Add Single Particle"))
+		{
+			terrainMesh->startParticleDepo();
+			terrainMesh->regenerateTerrain();
+		}
+
+		ImGui::Text("Loop Particle Deposition");
+
+		// These radio buttons will loop the particle depo algorithm indefinately until switched OFF again
+		// If switched to the ON state while running an amount of set iterations
+		// the iterations slider will move into a pause state
+		static int state = 0;
+
+		ImGui::RadioButton("Off", &state, 0); ImGui::SameLine(); ImGui::RadioButton("On", &state, 1);
+
+		if (state)
+		{
+			loopParticleDepo = true;
+		}
+		else
+		{
+			loopParticleDepo = false;
+		}
+
+		// This slider lets the user control how many iterations of the faulting algorithm they wish to run
+		ImGui::SliderInt("Particle Deposition Iterations", &particleDepoIterations, 2, 1000);
+
+		if (ImGui::Button("Run All Iterations"))
+		{
+			if (!loopParticleDepo)
+			{
+				runParticleDepoIterations = true;
+			}
+			else
+			{
+				runParticleDepoIterations = false;
+			}
+		}
+
+		// Manually pause the set iterations
+		if (ImGui::Button("Pause"))
+		{
+			runParticleDepoIterations = false;
 		}
 
 		ImGui::TreePop();

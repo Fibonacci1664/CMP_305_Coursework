@@ -1,6 +1,7 @@
 #pragma once
 #include "PlaneMesh.h"
 #include "Faulting.h"
+#include "ParticleDeposition.h"
 
 class Terrain : public PlaneMesh
 {
@@ -13,6 +14,7 @@ public:
 
 	// Generate terrain effects
 	void generateFault();
+	void startParticleDepo();
 
 private:
 	void initTerrain(int& newResolution, ID3D11Device* device, ID3D11DeviceContext* deviceContext);
@@ -33,5 +35,7 @@ private:
 	ID3D11Device* m_device;
 	ID3D11DeviceContext* m_deviceContext;
 
+	// Terrain Features
 	Faulting* faulting;
+	ParticleDeposition* particleDepo;
 };
