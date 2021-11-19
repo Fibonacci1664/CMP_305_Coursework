@@ -25,6 +25,7 @@ public:
 	~Faulting();
 
 	void createFault();
+	void updateHeightMap(float* newHeightMap);
 
 private:
 	

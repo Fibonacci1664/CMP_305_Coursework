@@ -26,7 +26,6 @@ protected:
 
 private:
 	// Init functions
-	void initGUIToggles();
 	void loadTextures();
 	void initTerrain();
 	void initLightShader(HWND& hwnd);
@@ -39,11 +38,13 @@ private:
 	void updateTerrain();
 	void checkFaulting();
 	void checkParticleDepo();
+	void checkPerlinNoise();
 
 	// Render functions
 	void buildAllGuiOptions();
 	void buildFaultingGui();
 	void buildParticleDepoGui();
+	void buildPerlinNoiseGui();
 	void renderTerrain();
 
 	// Terrain objects
@@ -57,11 +58,18 @@ private:
 	bool runFaultingIterations;
 	bool loopParticleDepo;
 	bool runParticleDepoIterations;
+	bool ridgedPerlinToggle;
+	bool fBmToggle;
 
-	// GUI vals
+	int terrainResolution;
 	int faultingIetrations;
 	int particleDepoIterations;
+	int fBmOctaves;
 
+	// GUI vals
+	float perlinFreq;
+	float perlinScale;
+	float amplitude;
 };
 
 #endif

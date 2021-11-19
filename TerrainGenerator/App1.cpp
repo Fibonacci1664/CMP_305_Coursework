@@ -1,5 +1,6 @@
-#include "App1.h"
 #include <vector>
+
+#include "App1.h"
 
 App1::App1()
 {
@@ -58,6 +59,7 @@ void App1::updateTerrain()
 {
 	checkFaulting();
 	checkParticleDepo();
+	checkPerlinNoise();
 }
 
 void App1::checkFaulting()
@@ -65,12 +67,10 @@ void App1::checkFaulting()
 	if (loopFaulting)
 	{
 		terrainMesh->generateFault();
-		terrainMesh->regenerateTerrain();
 	}
 	else if (runFaultingIterations && faultingIetrations > 0)
 	{
 		terrainMesh->generateFault();
-		terrainMesh->regenerateTerrain();
 
 		--faultingIetrations;
 
@@ -79,6 +79,8 @@ void App1::checkFaulting()
 			runFaultingIterations = false;
 		}
 	}
+
+	terrainMesh->regenerateTerrain();
 }
 
 void App1::checkParticleDepo()
@@ -86,12 +88,10 @@ void App1::checkParticleDepo()
 	if (loopParticleDepo)
 	{
 		terrainMesh->startParticleDepo();
-		terrainMesh->regenerateTerrain();
 	}
 	else if (runParticleDepoIterations && particleDepoIterations > 0)
 	{
 		terrainMesh->startParticleDepo();
-		terrainMesh->regenerateTerrain();
 
 		--particleDepoIterations;
 
@@ -100,6 +100,14 @@ void App1::checkParticleDepo()
 			runParticleDepoIterations = false;
 		}
 	}
+
+	terrainMesh->regenerateTerrain();
+}
+
+void App1::checkPerlinNoise()
+{
+	/*perlinFreq = terrainMesh->getPerlinFreq();
+	amplitude = terrainMesh->getPerlinAmplitude();*/
 }
 
 bool App1::frame()
@@ -164,8 +172,18 @@ void App1::gui()
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Text("Camera Pos: (%.2f, %.2f, %.2f)", camera->getPosition().x, camera->getPosition().y, camera->getPosition().z);
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
+	ImGui::SliderInt("Terrain Resolution", &terrainResolution, 2, 1024);
 
-	buildAllGuiOptions();
+	// Resize the terrain to a new resolution
+	if (ImGui::Button("Resize Terrain"))
+	{
+		if (terrainResolution != terrainMesh->getTerrainRes())
+		{
+			terrainMesh->resize(terrainResolution);
+			terrainMesh->regenerateTerrain();
+			terrainMesh->updateHeightMap();
+		}
+	}
 
 	// Get a brand new flat terrain
 	if (ImGui::Button("Reset Terrain"))
@@ -174,14 +192,11 @@ void App1::gui()
 		terrainMesh->regenerateTerrain();
 	}
 
+	buildAllGuiOptions();
+
 	// Render UI
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-}
-
-void App1::initGUIToggles()
-{
-	loopFaulting = false;
 }
 
 void App1::loadTextures()
@@ -226,20 +241,26 @@ void App1::initGUIVars()
 	runFaultingIterations = false;
 	loopParticleDepo = false;
 	runParticleDepoIterations = false;
-
+	ridgedPerlinToggle = false;
+	fBmToggle = false;
 
 	// Ints
+	terrainResolution = 128;
 	faultingIetrations = 0;
 	particleDepoIterations = 0;
+	fBmOctaves = 0;
 
 	// Floats
-
+	perlinFreq = 0.25f;
+	perlinScale = 0.05f;
+	amplitude = 2.0f;
 }
 
 void App1::buildAllGuiOptions()
 {
 	buildFaultingGui();
 	buildParticleDepoGui();
+	buildPerlinNoiseGui();
 }
 
 void App1::buildFaultingGui()
@@ -249,7 +270,6 @@ void App1::buildFaultingGui()
 		if (ImGui::Button("Add Single Fault"))
 		{
 			terrainMesh->generateFault();
-			terrainMesh->regenerateTerrain();
 		}
 
 		ImGui::Text("Loop Faulting");
@@ -302,7 +322,6 @@ void App1::buildParticleDepoGui()
 		if (ImGui::Button("Add Single Particle"))
 		{
 			terrainMesh->startParticleDepo();
-			terrainMesh->regenerateTerrain();
 		}
 
 		ImGui::Text("Loop Particle Deposition");
@@ -342,6 +361,93 @@ void App1::buildParticleDepoGui()
 		if (ImGui::Button("Pause"))
 		{
 			runParticleDepoIterations = false;
+		}
+
+		ImGui::TreePop();
+	}
+}
+
+void App1::buildPerlinNoiseGui()
+{
+	if (ImGui::TreeNode("Perlin Noise"))
+	{
+		ImGui::SliderFloat("Amplitude", &amplitude, 2.0f, 50.0f);
+		ImGui::SliderFloat("Frequency", &perlinFreq, 0.25f, 1.0f);
+		ImGui::SliderFloat("Scale", &perlinScale, 0.05f, 0.1f);
+
+		// Set PN class values according to the slider values
+		terrainMesh->setPNFreqScaleAmp(perlinFreq, perlinScale, amplitude);
+
+		static int state = 0;
+
+		ImGui::RadioButton("Old PN Algo", &state, 0); ImGui::SameLine(); ImGui::RadioButton("Improved PN Algo", &state, 1);
+
+		if (state)
+		{
+			// 'I' == Improved algorithm
+			terrainMesh->setPerlinAlgoType('I');
+		}
+		else
+		{
+			// 'O' == Old algorithm
+			terrainMesh->setPerlinAlgoType('O');
+		}
+
+		ImGui::Checkbox("Make Ridged Noise", &ridgedPerlinToggle);
+		terrainMesh->setPerlinRidged(ridgedPerlinToggle);
+
+		// Cumulatively add noise to the existing noise map with the current freq and scale vals
+		if (ImGui::Button("Generate/Add Fixed Noise"))
+		{
+			terrainMesh->genPerlinNoise();
+			terrainMesh->regenerateTerrain();
+		}
+
+		ImGui::SameLine();		ImGui::Text("This Cumulatively Adds To The Existing Map");
+
+		// Generate a new random map
+		if (ImGui::Button("Generate New Random Noise"))
+		{
+			terrainMesh->resetTerrain();
+			terrainMesh->regenerateTerrain();
+
+			// Rand num between 0 - 1
+			double newFreq = (double)rand() / (double)RAND_MAX;
+			// Rand num btween 0 - 0.1
+			double newScale = ((double)rand() / (double)RAND_MAX) / 10.0f;
+
+			perlinFreq = newFreq;
+			perlinScale = newScale;
+	
+			terrainMesh->genPerlinNoise();
+			terrainMesh->regenerateTerrain();
+		}
+
+		ImGui::SameLine();		ImGui::Text("This Generates An Entirely New Map With Random Freq/Scale");
+
+		// ############################### FRACTIONAL BROWNIAN MOTION STUFF ###############################
+
+		ImGui::Checkbox("Use fBm", &fBmToggle);
+		
+		if (fBmToggle)
+		{
+			ImGui::SliderInt("Octaves", &fBmOctaves, 0, 10);
+
+			terrainMesh->setfBmOctaves(fBmOctaves);
+
+			if (ImGui::Button("Run Single fBm"))
+			{
+				terrainMesh->setStepfBm(true);
+				terrainMesh->generatefBm();
+				terrainMesh->regenerateTerrain();
+			}
+
+			if (ImGui::Button("Run All fBm"))
+			{
+				terrainMesh->setStepfBm(false);
+				terrainMesh->generatefBm();
+				terrainMesh->regenerateTerrain();
+			}
 		}
 
 		ImGui::TreePop();

@@ -22,6 +22,12 @@ Terrain::~Terrain()
 		delete particleDepo;
 		particleDepo = nullptr;
 	}
+
+	if (perlinNoise)
+	{
+		delete perlinNoise;
+		perlinNoise = nullptr;
+	}
 }
 
 void Terrain::regenerateTerrain()
@@ -47,10 +53,13 @@ void Terrain::initTerrainObjects()
 {
 	faulting = new Faulting(resolution, heightMap);
 	particleDepo = new ParticleDeposition(resolution, heightMap);
+	perlinNoise = new PerlinNoise(resolution, heightMap, terrainSize);
 }
 
 void Terrain::resize(int& newResolution)
 {
+	newTerrain = true;
+
 	resolution = newResolution;
 
 	heightMap = new float[resolution * resolution];
@@ -61,6 +70,13 @@ void Terrain::resize(int& newResolution)
 	}
 
 	vertexBuffer = NULL;
+}
+
+void Terrain::updateHeightMap()
+{
+	faulting->updateHeightMap(heightMap);
+	particleDepo->updateHeightMap(heightMap);
+	perlinNoise->updateHeightMap(heightMap);
 }
 
 // Generate all the vertices and indice in our terrain
@@ -263,6 +279,8 @@ void Terrain::generateTerrain(ID3D11Device* device, ID3D11DeviceContext* deviceC
 
 void Terrain::buildTerrain()
 {
+	// Build a new terrain with 0 height values
+
 	float height = 0.0f;
 
 	// Scale everything so that the look is consistent across terrain resolutions
@@ -323,4 +341,56 @@ void Terrain::generateFault()
 void Terrain::startParticleDepo()
 {
 	particleDepo->runParticleDepo();
+}
+
+void Terrain::genPerlinNoise()
+{
+	perlinNoise->buildPerlinNoise();
+}
+
+void Terrain::generatefBm()
+{
+	perlinNoise->fracBrownianMotion();
+}
+
+int Terrain::getTerrainRes()
+{
+	return resolution;
+}
+
+void Terrain::setPNFreqScaleAmp(float freq, float scale, float amplitude)
+{
+	perlinNoise->setFrequency((double)freq);
+	perlinNoise->setScale((double)scale);
+	perlinNoise->setAmplitude(amplitude);
+}
+
+void Terrain::setPerlinRidged(bool isRidged)
+{
+	perlinNoise->setRidged(isRidged);
+}
+
+void Terrain::setPerlinAlgoType(char type)
+{
+	perlinNoise->setPerlinAlgorithm(type);
+}
+
+void Terrain::setStepfBm(bool isStep)
+{
+	perlinNoise->setStepfBm(isStep);
+}
+
+void Terrain::setfBmOctaves(int numOfOctaves)
+{
+	perlinNoise->setOctaves(numOfOctaves);
+}
+
+float Terrain::getPerlinFreq()
+{
+	return perlinNoise->getFreq();
+}
+
+float Terrain::getPerlinAmplitude()
+{
+	return perlinNoise->getAmplitude();
 }

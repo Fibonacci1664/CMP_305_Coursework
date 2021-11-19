@@ -6,6 +6,7 @@ public:
 	ParticleDeposition(int& res, float* heightmp);
 	~ParticleDeposition();
 	void runParticleDepo();
+	void updateHeightMap(float* newHeightMap);
 
 private:
 	void startParticleDepo();

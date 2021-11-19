@@ -101,6 +101,11 @@ void Faulting::createFault()
 	}
 }
 
+void Faulting::updateHeightMap(float* newHeightMap)
+{
+	heightmap = newHeightMap;
+}
+
 Coord* Faulting::getPosition(int prevEdge)
 {
 	Coord* position = new Coord;

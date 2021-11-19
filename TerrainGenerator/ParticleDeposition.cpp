@@ -18,6 +18,11 @@ void ParticleDeposition::runParticleDepo()
 	startParticleDepo();
 }
 
+void ParticleDeposition::updateHeightMap(float* newHeightMap)
+{
+	heightmap = newHeightMap;
+}
+
 void ParticleDeposition::startParticleDepo()
 {
 	int randHeight = rand() % 2 + 1;
