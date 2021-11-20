@@ -59,7 +59,7 @@ void App1::updateTerrain()
 {
 	checkFaulting();
 	checkParticleDepo();
-	checkPerlinNoise();
+	checkPerlinNoise();	
 }
 
 void App1::checkFaulting()
@@ -67,6 +67,7 @@ void App1::checkFaulting()
 	if (loopFaulting)
 	{
 		terrainMesh->generateFault();
+		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 	}
 	else if (runFaultingIterations && faultingIetrations > 0)
 	{
@@ -78,9 +79,8 @@ void App1::checkFaulting()
 		{
 			runFaultingIterations = false;
 		}
+		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 	}
-
-	terrainMesh->regenerateTerrain();
 }
 
 void App1::checkParticleDepo()
@@ -88,10 +88,12 @@ void App1::checkParticleDepo()
 	if (loopParticleDepo)
 	{
 		terrainMesh->startParticleDepo();
+		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 	}
 	else if (runParticleDepoIterations && particleDepoIterations > 0)
 	{
 		terrainMesh->startParticleDepo();
+		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 
 		--particleDepoIterations;
 
@@ -100,14 +102,76 @@ void App1::checkParticleDepo()
 			runParticleDepoIterations = false;
 		}
 	}
-
-	terrainMesh->regenerateTerrain();
 }
 
 void App1::checkPerlinNoise()
 {
-	/*perlinFreq = terrainMesh->getPerlinFreq();
-	amplitude = terrainMesh->getPerlinAmplitude();*/
+	if (addFixedNoise)
+	{
+		terrainMesh->setPNFreqScaleAmp(perlinFreq, perlinScale, amplitude);
+		terrainMesh->genPerlinNoise();
+		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
+		addFixedNoise = false;
+	}
+
+	if (newRandomNoise)
+	{
+		// Get a blank terrain with 0 for height values
+		terrainMesh->resetTerrain();
+		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
+
+		const float MIN_RAND = 0.1f, MAX_RAND = 0.15;
+		const float range = MAX_RAND - MIN_RAND;
+		float randomFreq = range * ((((double)rand()) / (double)RAND_MAX)) + MIN_RAND;
+		float randomScale = range * ((((double)rand()) / (double)RAND_MAX)) + MIN_RAND;
+
+		//// Rand num between 0 - 0.3
+		//double newFreq = (((double)rand() / (double)RAND_MAX) / 100.0f) + 0.1f;
+		//// Rand num btween 0 - 0.3
+		//double newScale = (((double)rand() / (double)RAND_MAX) / 100.0f) + 0.1f;
+		// Rand num between 5 - 10
+		double randomAmp = rand() % 5 + 5;
+
+		perlinFreq = randomFreq;
+		perlinScale = randomScale;
+		amplitude = randomAmp;
+
+		terrainMesh->setPNFreqScaleAmp(perlinFreq, perlinScale, amplitude);
+		terrainMesh->genPerlinNoise();
+		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
+
+		newRandomNoise = false;
+	}
+
+	if (runSingleOctave)
+	{
+		terrainMesh->generatefBm();
+		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
+		// Control entry into this statement unless the button is clicked again
+		runSingleOctave = false;
+	}
+
+	if (runAllOctaves && fBmOctaves > 0)
+	{
+		terrainMesh->generatefBm();
+		// Update the slider values with the PN class values that have been getting halved and doubled
+		perlinFreq = terrainMesh->getPerlinFreq();
+		amplitude = terrainMesh->getPerlinAmplitude();
+		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
+
+		--fBmOctaves;
+
+		if (fBmOctaves <= 0)
+		{
+			// Reset the values to the defaults
+			perlinFreq = 0.01f;
+			perlinScale = 0.01f;
+			amplitude = 5.0f;
+			terrainMesh->setPNFreqScaleAmp(perlinFreq, perlinScale, amplitude);
+			fBmOctaves = 0;
+			runAllOctaves = false;
+		}
+	}
 }
 
 bool App1::frame()
@@ -180,7 +244,7 @@ void App1::gui()
 		if (terrainResolution != terrainMesh->getTerrainRes())
 		{
 			terrainMesh->resize(terrainResolution);
-			terrainMesh->regenerateTerrain();
+			terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 			terrainMesh->updateHeightMap();
 		}
 	}
@@ -189,7 +253,7 @@ void App1::gui()
 	if (ImGui::Button("Reset Terrain"))
 	{
 		terrainMesh->resetTerrain();
-		terrainMesh->regenerateTerrain();
+		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 	}
 
 	buildAllGuiOptions();
@@ -237,12 +301,19 @@ void App1::initCam()
 void App1::initGUIVars()
 {
 	// Bools
+	// For Faulting
 	loopFaulting = false;
 	runFaultingIterations = false;
+	// For Particle Depo
 	loopParticleDepo = false;
 	runParticleDepoIterations = false;
+	// For Perlin Noise and fBm
+	newRandomNoise = false;
+	addFixedNoise = false;
 	ridgedPerlinToggle = false;
 	fBmToggle = false;
+	runSingleOctave = false;
+	runAllOctaves = false;
 
 	// Ints
 	terrainResolution = 128;
@@ -251,9 +322,9 @@ void App1::initGUIVars()
 	fBmOctaves = 0;
 
 	// Floats
-	perlinFreq = 0.25f;
-	perlinScale = 0.05f;
-	amplitude = 2.0f;
+	perlinFreq = 0.1f;
+	perlinScale = 0.1f;
+	amplitude = 5.0f;
 }
 
 void App1::buildAllGuiOptions()
@@ -270,6 +341,7 @@ void App1::buildFaultingGui()
 		if (ImGui::Button("Add Single Fault"))
 		{
 			terrainMesh->generateFault();
+			terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 		}
 
 		ImGui::Text("Loop Faulting");
@@ -322,6 +394,7 @@ void App1::buildParticleDepoGui()
 		if (ImGui::Button("Add Single Particle"))
 		{
 			terrainMesh->startParticleDepo();
+			terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 		}
 
 		ImGui::Text("Loop Particle Deposition");
@@ -371,12 +444,9 @@ void App1::buildPerlinNoiseGui()
 {
 	if (ImGui::TreeNode("Perlin Noise"))
 	{
-		ImGui::SliderFloat("Amplitude", &amplitude, 2.0f, 50.0f);
-		ImGui::SliderFloat("Frequency", &perlinFreq, 0.25f, 1.0f);
-		ImGui::SliderFloat("Scale", &perlinScale, 0.05f, 0.1f);
-
-		// Set PN class values according to the slider values
-		terrainMesh->setPNFreqScaleAmp(perlinFreq, perlinScale, amplitude);
+		ImGui::SliderFloat("Amplitude", &amplitude, 5.0f, 10.0f);
+		ImGui::SliderFloat("Frequency", &perlinFreq, 0.1f, 0.15f);
+		ImGui::SliderFloat("Scale", &perlinScale, 0.1f, 0.15f);
 
 		static int state = 0;
 
@@ -399,8 +469,7 @@ void App1::buildPerlinNoiseGui()
 		// Cumulatively add noise to the existing noise map with the current freq and scale vals
 		if (ImGui::Button("Generate/Add Fixed Noise"))
 		{
-			terrainMesh->genPerlinNoise();
-			terrainMesh->regenerateTerrain();
+			addFixedNoise = true;
 		}
 
 		ImGui::SameLine();		ImGui::Text("This Cumulatively Adds To The Existing Map");
@@ -408,19 +477,7 @@ void App1::buildPerlinNoiseGui()
 		// Generate a new random map
 		if (ImGui::Button("Generate New Random Noise"))
 		{
-			terrainMesh->resetTerrain();
-			terrainMesh->regenerateTerrain();
-
-			// Rand num between 0 - 1
-			double newFreq = (double)rand() / (double)RAND_MAX;
-			// Rand num btween 0 - 0.1
-			double newScale = ((double)rand() / (double)RAND_MAX) / 10.0f;
-
-			perlinFreq = newFreq;
-			perlinScale = newScale;
-	
-			terrainMesh->genPerlinNoise();
-			terrainMesh->regenerateTerrain();
+			newRandomNoise = true;
 		}
 
 		ImGui::SameLine();		ImGui::Text("This Generates An Entirely New Map With Random Freq/Scale");
@@ -431,22 +488,16 @@ void App1::buildPerlinNoiseGui()
 		
 		if (fBmToggle)
 		{
-			ImGui::SliderInt("Octaves", &fBmOctaves, 0, 10);
-
-			terrainMesh->setfBmOctaves(fBmOctaves);
-
-			if (ImGui::Button("Run Single fBm"))
+			if (ImGui::Button("Run Single fBm Octave"))
 			{
-				terrainMesh->setStepfBm(true);
-				terrainMesh->generatefBm();
-				terrainMesh->regenerateTerrain();
+				runSingleOctave = true;
 			}
 
-			if (ImGui::Button("Run All fBm"))
+			ImGui::SliderInt("Octaves", &fBmOctaves, 0, 10);
+
+			if (ImGui::Button("Run All fBm Octaves"))
 			{
-				terrainMesh->setStepfBm(false);
-				terrainMesh->generatefBm();
-				terrainMesh->regenerateTerrain();
+				runAllOctaves = true;
 			}
 		}
 

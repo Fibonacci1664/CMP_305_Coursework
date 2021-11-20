@@ -16,8 +16,6 @@ public:
 	void setAmplitude(float amp);
 	void setRidged(bool isRidged);
 	void setPerlinAlgorithm(char type);
-	void setStepfBm(bool isStep);
-	void setOctaves(int octaves);
 	float getFreq();
 	float getAmplitude();
 
@@ -28,11 +26,9 @@ private:
 	bool ridgedPerlin;
 	bool oldPerlin;
 	bool improvedPerlin;
-	bool stepfBm;
 
 	int& resolution;
 	const int& terrainSz;
-	int octaves;
 
 	float* heightmap;
 	float amplitude;

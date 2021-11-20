@@ -8,9 +8,6 @@ PerlinNoise::PerlinNoise(int& res, float* heightmp, const int& terrainSize) : re
 	ridgedPerlin = false;
 	oldPerlin = false;
 	improvedPerlin = false;
-	stepfBm = false;
-
-	octaves = 0;
 
 	perlinFreq = 0.0f;
 	perlinScale = 0.0f;
@@ -49,22 +46,9 @@ double PerlinNoise::genImprovedPerlinNoise(float xPos, float yPos, float zPos)
 
 void PerlinNoise::fracBrownianMotion()
 {
-	if (stepfBm)
-	{
-		buildPerlinNoise();
-		amplitude *= 0.5;
-		perlinFreq *= 2;
-		stepfBm = false;
-	}
-	else
-	{
-		for (int i = 0; i < octaves; ++i)
-		{
-			buildPerlinNoise();
-			amplitude *= 0.5;
-			perlinFreq *= 2;
-		}
-	}
+	buildPerlinNoise();
+	amplitude *= 0.5;
+	perlinFreq *= 2;
 }
 
 void PerlinNoise::buildPerlinNoise()
@@ -138,16 +122,6 @@ void PerlinNoise::setPerlinAlgorithm(char type)
 		improvedPerlin = true;
 		oldPerlin = false;
 	}
-}
-
-void PerlinNoise::setStepfBm(bool isStep)
-{
-	stepfBm = isStep;
-}
-
-void PerlinNoise::setOctaves(int fMbOctaves)
-{
-	octaves = fMbOctaves;
 }
 
 float PerlinNoise::getFreq()

@@ -1,7 +1,7 @@
 #include "Terrain.h"
 
 Terrain::Terrain(ID3D11Device* device, ID3D11DeviceContext* deviceContext, int resolution) :
-	PlaneMesh(device, deviceContext, resolution), m_device(device), m_deviceContext(deviceContext)
+	PlaneMesh(device, deviceContext, resolution)
 {
 	initTerrain(resolution, device, deviceContext);
 }
@@ -28,11 +28,6 @@ Terrain::~Terrain()
 		delete perlinNoise;
 		perlinNoise = nullptr;
 	}
-}
-
-void Terrain::regenerateTerrain()
-{
-	generateTerrain(m_device, m_deviceContext);
 }
 
 void Terrain::resetTerrain()
@@ -62,6 +57,10 @@ void Terrain::resize(int& newResolution)
 
 	resolution = newResolution;
 
+	// Clean up old heightMap before reassinging or we'll have a mem leak
+	delete[] heightMap;
+	heightMap = 0;
+	
 	heightMap = new float[resolution * resolution];
 
 	if (vertexBuffer != NULL)
@@ -373,16 +372,6 @@ void Terrain::setPerlinRidged(bool isRidged)
 void Terrain::setPerlinAlgoType(char type)
 {
 	perlinNoise->setPerlinAlgorithm(type);
-}
-
-void Terrain::setStepfBm(bool isStep)
-{
-	perlinNoise->setStepfBm(isStep);
-}
-
-void Terrain::setfBmOctaves(int numOfOctaves)
-{
-	perlinNoise->setOctaves(numOfOctaves);
 }
 
 float Terrain::getPerlinFreq()

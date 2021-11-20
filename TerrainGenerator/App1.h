@@ -54,12 +54,19 @@ private:
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 
 	// GUI bools
+	// For Faulting
 	bool loopFaulting;
 	bool runFaultingIterations;
+	// For Particle Depo
 	bool loopParticleDepo;
 	bool runParticleDepoIterations;
+	// For Perlin Noise and fBm
+	bool newRandomNoise;
+	bool addFixedNoise;
 	bool ridgedPerlinToggle;
 	bool fBmToggle;
+	bool runSingleOctave;
+	bool runAllOctaves;
 
 	int terrainResolution;
 	int faultingIetrations;
