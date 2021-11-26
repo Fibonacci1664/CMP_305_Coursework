@@ -64,6 +64,7 @@ private:
 	bool newRandomNoise;
 	bool addFixedNoise;
 	bool ridgedPerlinToggle;
+	bool terracedPerlinToggle;
 	bool fBmToggle;
 	bool runSingleOctave;
 	bool runAllOctaves;

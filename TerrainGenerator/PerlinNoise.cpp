@@ -55,6 +55,7 @@ void PerlinNoise::buildPerlinNoise()
 {
 	float height = 0.0f;
 	double noise = 0.0f;
+	float result = 0.0f;
 
 	// Scale everything so that the look is consistent across terrain resolutions
 	const float scale = terrainSz / (float)resolution;
@@ -73,10 +74,21 @@ void PerlinNoise::buildPerlinNoise()
 				noise = genImprovedPerlinNoise(x, 0, z);
 			}
 
-			// Is it going to be ridged or not?
+			// Is it going to be ridged or terraced or normal?
 			if (ridgedPerlin)
 			{
-				height = abs(amplitude * noise);
+				result = amplitude * abs(noise);
+				// The smaller the exponent the more defined and sharper the ridge
+				// The larger the exponent the softer and more rounded the ridge
+				// Sensible range for values are 0.75 - 2.0
+				height = pow(result, 0.75f) / 0.75f;
+				// Invert the height so we get ridges, otherwise the "ridges" will be more like valleys, which could also be useful
+				height *= -1.0f;				
+			}
+			else if (terracedPerlin)
+			{
+				result = amplitude * noise;
+				height = round(result);
 				height *= -1.0f;
 			}
 			else
@@ -108,6 +120,11 @@ void PerlinNoise::setAmplitude(float amp)
 void PerlinNoise::setRidged(bool isRidged)
 {
 	ridgedPerlin = isRidged;
+}
+
+void PerlinNoise::setTerraced(bool isTerraced)
+{
+	terracedPerlin = isTerraced;
 }
 
 void PerlinNoise::setPerlinAlgorithm(char type)

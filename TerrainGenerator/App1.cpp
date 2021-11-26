@@ -120,7 +120,8 @@ void App1::checkPerlinNoise()
 		terrainMesh->resetTerrain();
 		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 
-		const float MIN_RAND = 0.1f, MAX_RAND = 0.15;
+		// These max min rnage values must be the same as the max min GUI values
+		const float MIN_RAND = 0.1f, MAX_RAND = 0.2f;
 		const float range = MAX_RAND - MIN_RAND;
 		float randomFreq = range * ((((double)rand()) / (double)RAND_MAX)) + MIN_RAND;
 		float randomScale = range * ((((double)rand()) / (double)RAND_MAX)) + MIN_RAND;
@@ -164,8 +165,8 @@ void App1::checkPerlinNoise()
 		if (fBmOctaves <= 0)
 		{
 			// Reset the values to the defaults
-			perlinFreq = 0.01f;
-			perlinScale = 0.01f;
+			perlinFreq = 0.2f;
+			perlinScale = 0.2f;
 			amplitude = 5.0f;
 			terrainMesh->setPNFreqScaleAmp(perlinFreq, perlinScale, amplitude);
 			fBmOctaves = 0;
@@ -236,7 +237,7 @@ void App1::gui()
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Text("Camera Pos: (%.2f, %.2f, %.2f)", camera->getPosition().x, camera->getPosition().y, camera->getPosition().z);
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
-	ImGui::SliderInt("Terrain Resolution", &terrainResolution, 2, 1024);
+	ImGui::SliderInt("Terrain Resolution", &terrainResolution, 512, 1024);
 
 	// Resize the terrain to a new resolution
 	if (ImGui::Button("Resize Terrain"))
@@ -271,7 +272,7 @@ void App1::loadTextures()
 
 void App1::initTerrain()
 {
-	terrainMesh = new Terrain(renderer->getDevice(), renderer->getDeviceContext());
+	terrainMesh = new Terrain(renderer->getDevice(), renderer->getDeviceContext(), 512);
 }
 
 void App1::initLightShader(HWND& hwnd)
@@ -311,19 +312,20 @@ void App1::initGUIVars()
 	newRandomNoise = false;
 	addFixedNoise = false;
 	ridgedPerlinToggle = false;
+	terracedPerlinToggle = false;
 	fBmToggle = false;
 	runSingleOctave = false;
 	runAllOctaves = false;
 
 	// Ints
-	terrainResolution = 128;
+	terrainResolution = 512;
 	faultingIetrations = 0;
 	particleDepoIterations = 0;
 	fBmOctaves = 0;
 
 	// Floats
-	perlinFreq = 0.1f;
-	perlinScale = 0.1f;
+	perlinFreq = 0.2f;
+	perlinScale = 0.2f;
 	amplitude = 5.0f;
 }
 
@@ -445,14 +447,14 @@ void App1::buildPerlinNoiseGui()
 	if (ImGui::TreeNode("Perlin Noise"))
 	{
 		ImGui::SliderFloat("Amplitude", &amplitude, 5.0f, 10.0f);
-		ImGui::SliderFloat("Frequency", &perlinFreq, 0.1f, 0.15f);
-		ImGui::SliderFloat("Scale", &perlinScale, 0.1f, 0.15f);
+		ImGui::SliderFloat("Frequency", &perlinFreq, 0.1f, 0.2f);
+		ImGui::SliderFloat("Scale", &perlinScale, 0.1f, 0.2f);
 
-		static int state = 0;
+		static int algoState = 0;
 
-		ImGui::RadioButton("Old PN Algo", &state, 0); ImGui::SameLine(); ImGui::RadioButton("Improved PN Algo", &state, 1);
+		ImGui::RadioButton("Old PN Algo", &algoState, 0); ImGui::SameLine(); ImGui::RadioButton("Improved PN Algo", &algoState, 1);
 
-		if (state)
+		if (algoState)
 		{
 			// 'I' == Improved algorithm
 			terrainMesh->setPerlinAlgoType('I');
@@ -463,8 +465,41 @@ void App1::buildPerlinNoiseGui()
 			terrainMesh->setPerlinAlgoType('O');
 		}
 
-		ImGui::Checkbox("Make Ridged Noise", &ridgedPerlinToggle);
+		static int styleState = 0;
+
+		ImGui::RadioButton("Ridged Noise", &styleState, 0); ImGui::SameLine(); ImGui::RadioButton("Terraced Noise", &styleState, 1);
+
+		if (styleState)
+		{
+			ridgedPerlinToggle = false;
+			terracedPerlinToggle = true;
+		}
+		else
+		{
+			ridgedPerlinToggle = true;
+			terracedPerlinToggle = false;
+		}
+
 		terrainMesh->setPerlinRidged(ridgedPerlinToggle);
+		terrainMesh->setPerlinTerraced(terracedPerlinToggle);
+
+		/*ImGui::Checkbox("Make Ridged Noise", &ridgedPerlinToggle);
+		
+
+		ImGui::Checkbox("Make Terraced Noise", &terracedPerlinToggle);
+		
+
+		if (terracedPerlinToggle)
+		{
+			ridgedPerlinToggle = -ridgedPerlinToggle;
+			terrainMesh->setPerlinRidged(ridgedPerlinToggle);
+		}
+
+		if (ridgedPerlinToggle)
+		{
+			terracedPerlinToggle = -terracedPerlinToggle;
+			terrainMesh->setPerlinTerraced(terracedPerlinToggle);
+		}*/
 
 		// Cumulatively add noise to the existing noise map with the current freq and scale vals
 		if (ImGui::Button("Generate/Add Fixed Noise"))

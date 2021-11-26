@@ -27,6 +27,7 @@ public:
 	int getTerrainRes();
 	void setPNFreqScaleAmp(float freq, float scale, float amplitude);
 	void setPerlinRidged(bool isRidged);
+	void setPerlinTerraced(bool isTerraced);
 	void setPerlinAlgoType(char type);
 	float getPerlinFreq();
 	float getPerlinAmplitude();

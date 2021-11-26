@@ -369,6 +369,11 @@ void Terrain::setPerlinRidged(bool isRidged)
 	perlinNoise->setRidged(isRidged);
 }
 
+void Terrain::setPerlinTerraced(bool isTerraced)
+{
+	perlinNoise->setTerraced(isTerraced);
+}
+
 void Terrain::setPerlinAlgoType(char type)
 {
 	perlinNoise->setPerlinAlgorithm(type);

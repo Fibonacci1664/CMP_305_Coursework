@@ -15,6 +15,7 @@ public:
 	void setScale(double scl);
 	void setAmplitude(float amp);
 	void setRidged(bool isRidged);
+	void setTerraced(bool isTerraced);
 	void setPerlinAlgorithm(char type);
 	float getFreq();
 	float getAmplitude();
@@ -24,6 +25,7 @@ private:
 	double genImprovedPerlinNoise(float xPos, float yPos, float zPos);
 	
 	bool ridgedPerlin;
+	bool terracedPerlin;
 	bool oldPerlin;
 	bool improvedPerlin;
 
