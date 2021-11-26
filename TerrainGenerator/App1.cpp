@@ -331,6 +331,7 @@ void App1::initGUIVars()
 
 void App1::buildAllGuiOptions()
 {
+	buildSmoothingGui();
 	buildFaultingGui();
 	buildParticleDepoGui();
 	buildPerlinNoiseGui();
@@ -465,41 +466,32 @@ void App1::buildPerlinNoiseGui()
 			terrainMesh->setPerlinAlgoType('O');
 		}
 
-		static int styleState = 0;
+		static int noiseStyle = 0;
 
-		ImGui::RadioButton("Ridged Noise", &styleState, 0); ImGui::SameLine(); ImGui::RadioButton("Terraced Noise", &styleState, 1);
+		//ImGui::RadioButton("Ridged Noise", &noiseStyle, 0); 
+		//ImGui::RadioButton("Terraced Noise", &noiseStyle, 1); 
+		//ImGui::RadioButton("Normal Noise", &noiseStyle, 2);
 
-		if (styleState)
+		if (ImGui::RadioButton("Normal Noise", &noiseStyle, 0))
 		{
 			ridgedPerlinToggle = false;
-			terracedPerlinToggle = true;
+			terracedPerlinToggle = false;
 		}
-		else
+
+		if (ImGui::RadioButton("Ridged Noise", &noiseStyle, 1))
 		{
 			ridgedPerlinToggle = true;
 			terracedPerlinToggle = false;
 		}
 
-		terrainMesh->setPerlinRidged(ridgedPerlinToggle);
-		terrainMesh->setPerlinTerraced(terracedPerlinToggle);
-
-		/*ImGui::Checkbox("Make Ridged Noise", &ridgedPerlinToggle);
-		
-
-		ImGui::Checkbox("Make Terraced Noise", &terracedPerlinToggle);
-		
-
-		if (terracedPerlinToggle)
+		if(ImGui::RadioButton("Terraced Noise", &noiseStyle, 2))
 		{
-			ridgedPerlinToggle = -ridgedPerlinToggle;
-			terrainMesh->setPerlinRidged(ridgedPerlinToggle);
+			ridgedPerlinToggle = false;
+			terracedPerlinToggle = true;
 		}
 
-		if (ridgedPerlinToggle)
-		{
-			terracedPerlinToggle = -terracedPerlinToggle;
-			terrainMesh->setPerlinTerraced(terracedPerlinToggle);
-		}*/
+		terrainMesh->setPerlinRidged(ridgedPerlinToggle);
+		terrainMesh->setPerlinTerraced(terracedPerlinToggle);
 
 		// Cumulatively add noise to the existing noise map with the current freq and scale vals
 		if (ImGui::Button("Generate/Add Fixed Noise"))
@@ -507,7 +499,7 @@ void App1::buildPerlinNoiseGui()
 			addFixedNoise = true;
 		}
 
-		ImGui::SameLine();		ImGui::Text("This Cumulatively Adds To The Existing Map");
+		ImGui::SameLine();		ImGui::Text("This Cumulatively Adds To The Existing Map Using The Noise Type Selected");
 
 		// Generate a new random map
 		if (ImGui::Button("Generate New Random Noise"))
@@ -515,7 +507,7 @@ void App1::buildPerlinNoiseGui()
 			newRandomNoise = true;
 		}
 
-		ImGui::SameLine();		ImGui::Text("This Generates An Entirely New Map With Random Freq/Scale");
+		ImGui::SameLine();		ImGui::Text("This Generates An Entirely New Map With Random Freq/Scale Using The Noise Type Selected");
 
 		// ############################### FRACTIONAL BROWNIAN MOTION STUFF ###############################
 
@@ -537,6 +529,15 @@ void App1::buildPerlinNoiseGui()
 		}
 
 		ImGui::TreePop();
+	}
+}
+
+void App1::buildSmoothingGui()
+{
+	if (ImGui::Button("Smooth Terrain"))
+	{
+		terrainMesh->smoothTerrain();
+		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 	}
 }
 

@@ -5,6 +5,7 @@
 #include "Faulting.h"
 #include "ParticleDeposition.h"
 #include "PerlinNoise.h"
+#include "Smoothing.h"
 
 class Terrain : public PlaneMesh
 {
@@ -22,6 +23,7 @@ public:
 	void startParticleDepo();
 	void genPerlinNoise();
 	void generatefBm();
+	void smoothTerrain();
 
 	// Getters and Setters
 	int getTerrainRes();
@@ -50,4 +52,5 @@ private:
 	Faulting* faulting;
 	ParticleDeposition* particleDepo;
 	PerlinNoise* perlinNoise;
+	Smoothing* smoothing;
 };

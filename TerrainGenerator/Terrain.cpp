@@ -28,6 +28,12 @@ Terrain::~Terrain()
 		delete perlinNoise;
 		perlinNoise = nullptr;
 	}
+
+	if (smoothing)
+	{
+		delete smoothing;
+		smoothing = nullptr;
+	}
 }
 
 void Terrain::resetTerrain()
@@ -49,6 +55,7 @@ void Terrain::initTerrainObjects()
 	faulting = new Faulting(resolution, heightMap);
 	particleDepo = new ParticleDeposition(resolution, heightMap);
 	perlinNoise = new PerlinNoise(resolution, heightMap, terrainSize);
+	smoothing = new Smoothing(resolution, heightMap, terrainSize);
 }
 
 void Terrain::resize(int& newResolution)
@@ -350,6 +357,11 @@ void Terrain::genPerlinNoise()
 void Terrain::generatefBm()
 {
 	perlinNoise->fracBrownianMotion();
+}
+
+void Terrain::smoothTerrain()
+{
+	smoothing->smoothTerrain();
 }
 
 int Terrain::getTerrainRes()

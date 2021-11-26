@@ -45,6 +45,7 @@ private:
 	void buildFaultingGui();
 	void buildParticleDepoGui();
 	void buildPerlinNoiseGui();
+	void buildSmoothingGui();
 	void renderTerrain();
 
 	// Terrain objects

@@ -27,6 +27,7 @@
     <ClCompile Include="OldPerlinNoise.cpp" />
     <ClCompile Include="ParticleDeposition.cpp" />
     <ClCompile Include="PerlinNoise.cpp" />
+    <ClCompile Include="Smoothing.cpp" />
     <ClCompile Include="Terrain.cpp" />
     <ClCompile Include="TerrainMesh.cpp" />
   </ItemGroup>
@@ -39,6 +40,7 @@
     <ClInclude Include="OldPerlinNoise.h" />
     <ClInclude Include="ParticleDeposition.h" />
     <ClInclude Include="PerlinNoise.h" />
+    <ClInclude Include="Smoothing.h" />
     <ClInclude Include="Terrain.h" />
     <ClInclude Include="TerrainMesh.h" />
   </ItemGroup>
