@@ -79,6 +79,7 @@ private:
 	float perlinFreq;
 	float perlinScale;
 	float amplitude;
+	float noiseStyleValue;
 };
 
 #endif

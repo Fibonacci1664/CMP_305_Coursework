@@ -4,7 +4,7 @@
 
 App1::App1()
 {
-	
+	noiseStyleValue = 0.0f;
 }
 
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
@@ -268,6 +268,7 @@ void App1::loadTextures()
 {
 	textureMgr->loadTexture(L"brick", L"resources/textures/snow.png");
 	textureMgr->loadTexture(L"grass", L"resources/textures/grass.png");
+	textureMgr->loadTexture(L"sand", L"resources/textures/sand.png");
 }
 
 void App1::initTerrain()
@@ -476,18 +477,21 @@ void App1::buildPerlinNoiseGui()
 		{
 			ridgedPerlinToggle = false;
 			terracedPerlinToggle = false;
+			noiseStyleValue = 0;
 		}
 
 		if (ImGui::RadioButton("Ridged Noise", &noiseStyle, 1))
 		{
 			ridgedPerlinToggle = true;
 			terracedPerlinToggle = false;
+			noiseStyleValue = 1;
 		}
 
 		if(ImGui::RadioButton("Terraced Noise", &noiseStyle, 2))
 		{
 			ridgedPerlinToggle = false;
 			terracedPerlinToggle = true;
+			noiseStyleValue = 2;
 		}
 
 		terrainMesh->setPerlinRidged(ridgedPerlinToggle);
@@ -543,15 +547,12 @@ void App1::buildSmoothingGui()
 
 void App1::renderTerrain()
 {
-	// Add these later
-	//textureMgr->getTexture(L"grass"), textureMgr->getTexture(L"snow"),
-
 	terrainMesh->sendData(renderer->getDeviceContext());
 
 	lightShader->setShaderParameters(renderer->getDeviceContext(),
 		worldMatrix, viewMatrix, projectionMatrix,
-		textureMgr->getTexture(L"grass"),
-		dirLight);
+		textureMgr->getTexture(L"snow"), textureMgr->getTexture(L"grass"), textureMgr->getTexture(L"sand"),
+		dirLight, noiseStyleValue);
 
 	lightShader->render(renderer->getDeviceContext(), terrainMesh->getIndexCount());
 }

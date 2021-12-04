@@ -44,6 +44,7 @@ void LightShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilenam
 	D3D11_BUFFER_DESC matrixBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
 	D3D11_BUFFER_DESC lightBufferDesc;
+	D3D11_BUFFER_DESC nosieStyleBufferDesc;
 
 	// Load (+ compile) shader files
 	loadVertexShader(vsFilename);
@@ -80,6 +81,14 @@ void LightShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilenam
 	lightBufferDesc.MiscFlags = 0;
 	lightBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&lightBufferDesc, NULL, &lightBuffer);
+	
+	nosieStyleBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	nosieStyleBufferDesc.ByteWidth = sizeof(NoiseBufferType);
+	nosieStyleBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	nosieStyleBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	nosieStyleBufferDesc.MiscFlags = 0;
+	nosieStyleBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&lightBufferDesc, NULL, &noiseStyleBuffer);
 
 }
 
@@ -89,9 +98,10 @@ void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	const XMMATRIX &viewMatrix,
 	const XMMATRIX &projectionMatrix,
 	ID3D11ShaderResourceView* texture1,
-	/*ID3D11ShaderResourceView* texture2,
-	ID3D11ShaderResourceView* texture3,*/
-	Light* light)
+	ID3D11ShaderResourceView* texture2,
+	ID3D11ShaderResourceView* texture3,
+	Light* light,
+	float style)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -122,9 +132,17 @@ void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	deviceContext->Unmap(lightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
 
+	NoiseBufferType* noiseStylePtr;
+	deviceContext->Map(noiseStyleBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	noiseStylePtr = (NoiseBufferType*)mappedResource.pData;
+	noiseStylePtr->noiseStyle = style;
+	noiseStylePtr->noisePadding = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	deviceContext->Unmap(noiseStyleBuffer, 0);
+	deviceContext->PSSetConstantBuffers(1, 1, &noiseStyleBuffer);
+
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &texture1);
-	/*deviceContext->PSSetShaderResources(1, 1, &texture2);
-	deviceContext->PSSetShaderResources(2, 1, &texture3);*/
+	deviceContext->PSSetShaderResources(1, 1, &texture2);
+	deviceContext->PSSetShaderResources(2, 1, &texture3);
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
 }
