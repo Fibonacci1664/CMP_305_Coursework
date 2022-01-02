@@ -2,9 +2,10 @@
 
 #include "App1.h"
 
-App1::App1()
+App1::App1() : l_System("FA")
 {
 	noiseStyleValue = 0.0f;
+	systems.emplace("3DCylTree", false);
 }
 
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
@@ -16,10 +17,10 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	loadTextures();
 	
 	// Create Mesh objects
-	initTerrain();
+	initSceneObjects();
 
 	// Create shader objects
-	initLightShader(hwnd);
+	initShaders(hwnd);
 
 	// Initialise light
 	initLights();
@@ -42,10 +43,10 @@ App1::~App1()
 		terrainMesh = nullptr;
 	}
 
-	if (lightShader)
+	if (terrainShader)
 	{
-		delete lightShader;
-		lightShader = nullptr;
+		delete terrainShader;
+		terrainShader = nullptr;
 	}
 
 	if (dirLight)
@@ -79,6 +80,7 @@ void App1::checkFaulting()
 		{
 			runFaultingIterations = false;
 		}
+
 		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 	}
 }
@@ -175,6 +177,134 @@ void App1::checkPerlinNoise()
 	}
 }
 
+void App1::buildLSystem()
+{
+	// Clear any lines we might already have
+
+	m_CylinderList.clear();
+	leafList.clear();
+
+	//Get the current L-System string, right now we have a place holder
+	std::string systemString = l_System.GetCurrentSystem();
+
+	//Initialise some variables
+	XMVECTOR fwd = XMVectorSet(0, 0, 1, 0);		//Rotation axis. Our rotations happen around the "forward" vector
+	XMVECTOR left = XMVectorSet(-1, 0, 0, 0);
+	XMVECTOR up = XMVectorSet(0, 1, 0, 0);		//Current direction is "Up" Having 0 as the 'w' val prevents the coords of this 'vector' being modified by translations
+	XMVECTOR pos = XMVectorSet(0, 0, 0, 1);		//Current position (0,0,0) Having 1 as the 'w' val allows the coords of this 'point' to be modified by translations
+	XMVECTOR dir = XMVectorSet(0, 1, 0, 0);		//Current position (0,0,0) Having 1 as the 'w' val allows the coords of this 'point' to be modified by translations
+
+	XMMATRIX currentRotation = XMMatrixRotationRollPitchYaw(0, 0, 0);
+
+	// Go through the L-System string
+	for (int i = 0; i < systemString.length(); ++i)
+	{
+		if (build3DCylTreeToggle)
+		{
+			buildCyl3DTree(systemString[i], pos, dir, up, fwd, left, currentRotation);
+		}
+	}
+}
+
+void App1::buildCyl3DTree(char letter, XMVECTOR& pos, XMVECTOR& dir, XMVECTOR& up, XMVECTOR& fwd, XMVECTOR& left, XMMATRIX& currRot)
+{
+	float pitch = 25.0f;
+	float theta = 120.0f;
+	int randTheta = rand() % 40 + 80;		// Random num between 60 - 120
+	int randPitch = rand() % 10 + 25;		// Random num between 5 - 25
+
+	float randomMultiplier = ((float)rand()) / (float)RAND_MAX;
+
+	if (randomMultiplier < 0.5f)
+	{
+		randomMultiplier += 0.5f;
+	}
+
+	float randFloatTheta = (float)randTheta * randomMultiplier;
+	float randFloatPitch = (float)randPitch * randomMultiplier;
+
+	switch (letter)
+	{
+	case 'A':
+		// Add a leaf, a textured quad with transparent leaf tex, clip the transparent pixels in the PS
+		// This ensures we're not adding leaves to low down the trunk
+		if (iterations > 3)
+		{
+			// 50/50 whether or not to add a leaf
+			if (rand() % 2)
+			{
+				addLeaf(pos, currRot);
+			}
+		}
+
+		break;
+	case 'F':
+		XMVECTOR newBranchLength = XMVectorScale(dir, branchLengthMult);	// Get the new branch length based off of the multiplier reduction and using the dir vector
+		addCylinder(pos, currRot, newBranchLength, btmRad, topRad);			// Add a branch at position, with current rotation, with the new length, with the top and btm radius specified
+		pos += XMVector3TransformNormal(newBranchLength, currRot);			// Move to the end of the branch
+		break;
+	case '[':				// Save
+		position.push(pos);						// Save the current position
+		rotation.push(currRot);					// Save the current rotation
+		branchLength.push(branchLengthMult);	// Save current branch length
+		topRadStk.push(topRad);					// Save the current top rad
+		btmRadStk.push(btmRad);					// Save the current btm rad
+		branchLengthMult *= 0.68f;				// Reduce the branch length
+		btmRad = topRad;						// Set the btm radius to be the current top rad, this is so the next branch joins perfectly with the correct radius
+		topRad *= 0.60;							// Reduce the top radius of the branches so they get ever thinner
+		break;
+	case ']':				// Restore
+		pos = position.top();					// Reset the position to that which was saved
+		position.pop();							// Pop the top of the position stack
+		currRot = rotation.top();				// Reset the rotation to that which was saved
+		rotation.pop();							// Pop the top of the rotation stack
+		branchLengthMult = branchLength.top();	// Same same for all the rest
+		branchLength.pop();
+		topRad = topRadStk.top();
+		topRadStk.pop();
+		btmRad = btmRadStk.top();
+		btmRadStk.pop();
+		break;
+	case '&':				// Pitch
+		currRot *= XMMatrixRotationAxis(XMVector3TransformNormal(left, currRot), AI_DEG_TO_RAD(randFloatPitch));	// Rotate around left vector (x axis)
+		break;
+	case '>':				// Rotate right
+		currRot *= XMMatrixRotationAxis(XMVector3Transform(dir, currRot), AI_DEG_TO_RAD(-randFloatTheta));			// Rotate around up vector (y axis)
+		break;
+	case '<':				// Rotate left
+		currRot *= XMMatrixRotationAxis(XMVector3Transform(dir, currRot), AI_DEG_TO_RAD(randFloatTheta));			// Rotate around up vector (y axis)
+		break;
+	}
+}
+
+void App1::addCylinder(XMVECTOR& pos, XMMATRIX& currRot, XMVECTOR branchLen, float btmRadius, float topRadius)
+{
+	float len = XMVectorGetX(XMVector3Length(branchLen));
+
+	m_Cylinder = new CylinderMesh(renderer->getDevice(), renderer->getDeviceContext(), 1.0f, 6.0f, len, btmRadius, topRadius);
+	m_Cylinder->m_Transform = currRot * XMMatrixTranslationFromVector(pos);
+	m_CylinderList.push_back(m_Cylinder);
+}
+
+void App1::addLeaf(XMVECTOR& pos, XMMATRIX& currRot)
+{
+	// FOR CUSTOM LEAF
+	float leafScale = 0.02f;
+
+	quadLeaf = new Leaf(renderer->getDevice(), renderer->getDeviceContext(), pos, leafScale);
+	quadLeaf->m_transform = currRot;
+	leafList.push_back(quadLeaf);
+}
+
+void App1::resetLSystem()
+{
+	iterations = 0;
+	branchLengthMult = 1.0f;
+	l_System.Reset();
+	m_CylinderList.clear();
+	leafList.clear();
+}
+
 bool App1::frame()
 {
 	bool result;
@@ -202,7 +332,8 @@ bool App1::frame()
 bool App1::render()
 {
 	// Clear the scene. (default blue colour)
-	renderer->beginScene(0.39f, 0.58f, 0.92f, 1.0f);
+	//renderer->beginScene(0.39f, 0.58f, 0.92f, 1.0f);
+	renderer->beginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// Generate the view matrix based on the camera's position.
 	camera->update();
@@ -214,6 +345,7 @@ bool App1::render()
 
 	// Send geometry data, set shader parameters, render object with shader
 	renderTerrain();
+	renderLSystem();
 
 	// Render GUI
 	gui();
@@ -222,6 +354,60 @@ bool App1::render()
 	renderer->endScene();
 
 	return true;
+}
+
+void App1::renderTerrain()
+{
+	worldMatrix *= XMMatrixTranslation(-125.0f, 2.0f, -125.0f);
+
+	terrainMesh->sendData(renderer->getDeviceContext());
+
+	terrainShader->setShaderParameters(renderer->getDeviceContext(),
+		worldMatrix, viewMatrix, projectionMatrix,
+		textureMgr->getTexture(L"snow"), textureMgr->getTexture(L"grass"), textureMgr->getTexture(L"sand"),
+		dirLight, noiseStyleValue);
+
+	terrainShader->render(renderer->getDeviceContext(), terrainMesh->getIndexCount());
+
+	worldMatrix = XMMatrixIdentity();
+}
+
+void App1::renderLSystem()
+{
+	// FOR CYL TREE
+	for (int i = 0; i < m_CylinderList.size(); ++i)
+	{
+		if (m_CylinderList[i]->getIndexCount() > 0)
+		{
+			worldMatrix = XMMatrixMultiply(m_CylinderList[i]->m_Transform, worldMatrix);	
+			worldMatrix *= XMMatrixScaling(20.0f, 20.0f, 20.0f);
+
+			m_CylinderList[i]->sendData(renderer->getDeviceContext());
+			lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"goldBark"), dirLight);		
+			lightShader->render(renderer->getDeviceContext(), m_CylinderList[i]->getIndexCount());
+
+			worldMatrix = XMMatrixIdentity();
+		}
+	}
+			
+	// FOR CUSTOM LEAF
+	for (int i = 0; i < leafList.size(); ++i)
+	{
+		if (leafList.size() > 0)
+		{
+			if (leafList[i]->getIndexCount() > 0)
+			{
+				worldMatrix = XMMatrixRotationAxis(leafList[i]->m_position, -5.0f);				
+				worldMatrix *= XMMatrixScaling(20.0f, 20.0f, 20.0f);
+
+				leafList[i]->sendData(renderer->getDeviceContext());
+				leafShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"goldLeaf"), dirLight);				
+				leafShader->render(renderer->getDeviceContext(), leafList[i]->getIndexCount());
+
+				worldMatrix = XMMatrixIdentity();
+			}
+		}
+	}
 }
 
 void App1::gui()
@@ -236,6 +422,7 @@ void App1::gui()
 	// Build UI
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Text("Camera Pos: (%.2f, %.2f, %.2f)", camera->getPosition().x, camera->getPosition().y, camera->getPosition().z);
+	ImGui::Text("Camera Rot: (%.2f, %.2f, %.2f)", camera->getRotation().x, camera->getRotation().y, camera->getRotation().z);
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
 	ImGui::SliderInt("Terrain Resolution", &terrainResolution, 512, 1024);
 
@@ -270,16 +457,24 @@ void App1::loadTextures()
 	textureMgr->loadTexture(L"brick", L"resources/textures/snow.png");
 	textureMgr->loadTexture(L"grass", L"resources/textures/grass.png");
 	textureMgr->loadTexture(L"sand", L"resources/textures/sand.png");
+	/*textureMgr->loadTexture(L"bark", L"resources/textures/bark.png");
+	textureMgr->loadTexture(L"leaf", L"resources/textures/leaf.png");*/
+	textureMgr->loadTexture(L"goldLeaf", L"resources/textures/golden_leaf.png");
+	textureMgr->loadTexture(L"goldBark", L"resources/textures/golden_bark.png");
 }
 
-void App1::initTerrain()
+void App1::initSceneObjects()
 {
-	terrainMesh = new Terrain(renderer->getDevice(), renderer->getDeviceContext(), 512);
+	terrainMesh = new Terrain(renderer->getDevice(), renderer->getDeviceContext(), 512);		// Remember this is res NOT size, size is set in terrain.h
+	m_Cylinder = nullptr;
+	quadLeaf = nullptr;
 }
 
-void App1::initLightShader(HWND& hwnd)
+void App1::initShaders(HWND& hwnd)
 {
-	lightShader = new LightShader(renderer->getDevice(), hwnd);
+	terrainShader = new TerrainShader(renderer->getDevice(), hwnd);
+	leafShader = new LeafShader(renderer->getDevice(), hwnd);
+	lightShader = new LightShader(renderer->getDevice(), hwnd);	
 }
 
 void App1::initLights()
@@ -297,8 +492,8 @@ void App1::initDirLight()
 
 void App1::initCam()
 {
-	camera->setPosition(-16, 60, -15);
-	camera->setRotation(25, 45, 0);
+	camera->setPosition(-230.22f, 119.64f, -206.92f);
+	camera->setRotation(20.25f, 37.75f, 0.00f);
 }
 
 void App1::initGUIVars()
@@ -340,6 +535,13 @@ void App1::buildAllGuiOptions()
 		ImGui::TreePop();
 	}
 
+	if (ImGui::TreeNode("Play with L-System Tree"))
+	{
+		buildLSystemGUI();
+
+		ImGui::TreePop();
+	}
+
 	if (ImGui::TreeNode("Play with Terrain Features"))
 	{
 		buildFaultingGui();
@@ -369,6 +571,44 @@ void App1::buildSmoothingGui()
 		terrainMesh->smoothTerrain();
 		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 	}
+}
+
+void App1::buildLSystemGUI()
+{
+	ImGui::Checkbox("Build 3D Cylinder Tree", &build3DCylTreeToggle);
+	systems["3DCylTree"] = build3DCylTreeToggle;
+
+	if (ImGui::Button("Reset L-System"))
+	{
+		resetLSystem();
+	}
+
+	if (ImGui::Button("Build Entire Tree"))
+	{
+		resetLSystem();
+
+		while (iterations < 8)
+		{
+			buildLSystem();
+			l_System.Iterate(systems);
+			++iterations;
+		}
+	}
+
+	if (ImGui::Button("Iterate Over Tree"))
+	{
+		buildLSystem();
+		l_System.Iterate(systems);
+		++iterations;
+	}
+
+	ImGui::Text("Iterations: %d", iterations);
+
+	ImGui::LabelText(l_System.GetAxiom().c_str(), "Axiom:");
+
+	// FIX THIS IT IS NOT SHOWING THE CORRECT SYSTEM FOR THE CURRENT ITERATION! IT IS SHOWING THE NEXT SYSTEM!
+	ImGui::Text("System:");
+	ImGui::TextWrapped(l_System.GetCurrentSystem().c_str());
 }
 
 void App1::buildFaultingGui()
@@ -502,10 +742,6 @@ void App1::buildPerlinNoiseGui()
 
 		static int noiseStyle = 0;
 
-		//ImGui::RadioButton("Ridged Noise", &noiseStyle, 0); 
-		//ImGui::RadioButton("Terraced Noise", &noiseStyle, 1); 
-		//ImGui::RadioButton("Normal Noise", &noiseStyle, 2);
-
 		if (ImGui::RadioButton("Normal Noise", &noiseStyle, 0))
 		{
 			ridgedPerlinToggle = false;
@@ -571,16 +807,4 @@ void App1::buildPerlinNoiseGui()
 
 		ImGui::TreePop();
 	}
-}
-
-void App1::renderTerrain()
-{
-	terrainMesh->sendData(renderer->getDeviceContext());
-
-	lightShader->setShaderParameters(renderer->getDeviceContext(),
-		worldMatrix, viewMatrix, projectionMatrix,
-		textureMgr->getTexture(L"snow"), textureMgr->getTexture(L"grass"), textureMgr->getTexture(L"sand"),
-		dirLight, noiseStyleValue);
-
-	lightShader->render(renderer->getDeviceContext(), terrainMesh->getIndexCount());
 }

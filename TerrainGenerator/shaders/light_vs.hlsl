@@ -1,4 +1,4 @@
-// Light vertex shader
+// Basic lighting and texture vertex shader
 // Standard issue vertex shader, apply matrices, pass info to pixel shader
 cbuffer MatrixBuffer : register(b0)
 {

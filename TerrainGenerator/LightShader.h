@@ -1,5 +1,4 @@
 #pragma once
-
 #include "DXF.h"
 
 using namespace std;
@@ -15,33 +14,23 @@ private:
 		float padding;
 	};
 
-	struct NoiseBufferType
-	{
-		float noiseStyle;
-		XMFLOAT3 noisePadding;
-	};
-
 public:
 	LightShader(ID3D11Device* device, HWND hwnd);
 	~LightShader();
 
 	void setShaderParameters(ID3D11DeviceContext* deviceContext,
-		const XMMATRIX &world,
-		const XMMATRIX &view,
-		const XMMATRIX &projection,
-		ID3D11ShaderResourceView* texture1,
-		ID3D11ShaderResourceView* texture2,
-		ID3D11ShaderResourceView* texture3,
-		Light* light,
-		float noiseStyle);
+		const XMMATRIX& world,
+		const XMMATRIX& view,
+		const XMMATRIX& projection,
+		ID3D11ShaderResourceView* texture,
+		Light* light);
 
 private:
 	void initShader(const wchar_t* cs, const wchar_t* ps);
 
 private:
-	ID3D11Buffer * matrixBuffer;
+	ID3D11Buffer* matrixBuffer;
 	ID3D11SamplerState* sampleState;
 	ID3D11Buffer* lightBuffer;
-	ID3D11Buffer* noiseStyleBuffer;
 };
 

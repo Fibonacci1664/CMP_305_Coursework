@@ -6,6 +6,12 @@
 #include "DXF.h"	// include dxframework
 #include <memory>
 #include "Terrain.h"
+#include "TerrainShader.h"
+#include "CylinderMesh.h"
+#include "Leaf.h"
+#include "LSystem.h"
+#include <stack>
+#include "LeafShader.h"
 #include "LightShader.h"
 
 using std::unique_ptr;
@@ -22,13 +28,14 @@ public:
 
 protected:
 	bool render();
+	void renderLSystem();
 	void gui();
 
 private:
 	// Init functions
 	void loadTextures();
-	void initTerrain();
-	void initLightShader(HWND& hwnd);
+	void initSceneObjects();
+	void initShaders(HWND& hwnd);
 	void initLights();
 	void initDirLight();
 	void initCam();
@@ -40,10 +47,18 @@ private:
 	void checkParticleDepo();
 	void checkPerlinNoise();
 
+	// L-System
+	void buildLSystem();
+	void buildCyl3DTree(char letter, XMVECTOR& pos, XMVECTOR& dir, XMVECTOR& up, XMVECTOR& fwd, XMVECTOR& left, XMMATRIX& currRot);
+	void addCylinder(XMVECTOR& pos, XMMATRIX& currRot, XMVECTOR branchLen, float btmRadius, float topRadius);
+	void addLeaf(XMVECTOR& pos, XMMATRIX& currRot);
+	void resetLSystem();
+
 	// Render functions
 	void buildAllGuiOptions();
 	void buildCompleteTerrain();
 	void buildSmoothingGui();
+	void buildLSystemGUI();
 	void buildFaultingGui();
 	void buildParticleDepoGui();
 	void buildPerlinNoiseGui();
@@ -51,7 +66,7 @@ private:
 
 	// Terrain objects
 	Terrain* terrainMesh;
-	LightShader* lightShader;
+	TerrainShader* terrainShader;
 	Light* dirLight;
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 
@@ -59,9 +74,11 @@ private:
 	// For Faulting
 	bool loopFaulting;
 	bool runFaultingIterations;
+
 	// For Particle Depo
 	bool loopParticleDepo;
 	bool runParticleDepoIterations;
+
 	// For Perlin Noise and fBm
 	bool newRandomNoise;
 	bool addFixedNoise;
@@ -75,6 +92,30 @@ private:
 	int faultingIetrations;
 	int particleDepoIterations;
 	int fBmOctaves;
+
+	// L-system
+	CylinderMesh* m_Cylinder;
+	Leaf* quadLeaf;
+	LSystem l_System;
+	LeafShader* leafShader;
+	LightShader* lightShader;
+
+	std::vector<CylinderMesh*> m_CylinderList;
+	std::vector<Leaf*> leafList;	
+	std::map<std::string, bool> systems;
+	std::stack<XMVECTOR> position;
+	std::stack<XMMATRIX> rotation;
+	std::stack<float> branchLength;
+	std::stack<float> topRadStk;
+	std::stack<float> btmRadStk;
+
+	int iterations = 0;
+
+	float branchLengthMult = 1.0f;
+	float topRad = 0.05f;
+	float btmRad = 0.1f;
+
+	bool build3DCylTreeToggle;
 
 	// GUI vals
 	float perlinFreq;

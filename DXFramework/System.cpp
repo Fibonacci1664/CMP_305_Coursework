@@ -116,7 +116,7 @@ void System::initialiseWindows(int& screenWidth, int& screenHeight)
 	hinstance = GetModuleHandle(NULL);
 
 	// Give the application a name.
-	applicationName = L"Engine";
+	applicationName = L"Elden Wrong!";
 
 	// Setup the windows class with default settings.
 	wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;

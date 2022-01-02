@@ -21,7 +21,7 @@
     <ClCompile Include="App1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LightShader.cpp">
+    <ClCompile Include="TerrainShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TerrainMesh.cpp">
@@ -48,12 +48,27 @@
     <ClCompile Include="Smoothing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CylinderMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Leaf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LeafShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LightShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LightShader.h">
+    <ClInclude Include="TerrainShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TerrainMesh.h">
@@ -83,8 +98,27 @@
     <ClInclude Include="Smoothing.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CylinderMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Leaf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LeafShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LightShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="shaders\terrain_ps.hlsl" />
+    <FxCompile Include="shaders\terrain_vs.hlsl" />
+    <FxCompile Include="shaders\leaf_ps.hlsl" />
+    <FxCompile Include="shaders\leaf_vs.hlsl" />
     <FxCompile Include="shaders\light_ps.hlsl" />
     <FxCompile Include="shaders\light_vs.hlsl" />
   </ItemGroup>
