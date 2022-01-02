@@ -42,10 +42,11 @@ private:
 
 	// Render functions
 	void buildAllGuiOptions();
+	void buildCompleteTerrain();
+	void buildSmoothingGui();
 	void buildFaultingGui();
 	void buildParticleDepoGui();
 	void buildPerlinNoiseGui();
-	void buildSmoothingGui();
 	void renderTerrain();
 
 	// Terrain objects

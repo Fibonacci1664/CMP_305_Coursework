@@ -1,5 +1,5 @@
-﻿D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\TerrainGenerator\shaders\light_ps.hlsl(110,5): warning X4000: use of potentially uninitialized variable (doRidgedHeightTexturing)
-D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\TerrainGenerator\shaders\light_ps.hlsl(65,5): warning X4000: use of potentially uninitialized variable (doNormalHeightTexturing)
-  
-  compilation object save succeeded; see D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\TerrainGenerator\light_ps.cso
+﻿  App1.cpp
+D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\TerrainGenerator\App1.cpp(126,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\TerrainGenerator\App1.cpp(127,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\TerrainGenerator\App1.cpp(138,15): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   TerrainGenerator.vcxproj -> D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\x64\Debug\TerrainGenerator.exe

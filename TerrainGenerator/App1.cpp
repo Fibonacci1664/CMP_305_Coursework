@@ -257,6 +257,7 @@ void App1::gui()
 		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 	}
 
+	buildSmoothingGui();
 	buildAllGuiOptions();
 
 	// Render UI
@@ -332,10 +333,42 @@ void App1::initGUIVars()
 
 void App1::buildAllGuiOptions()
 {
-	buildSmoothingGui();
-	buildFaultingGui();
-	buildParticleDepoGui();
-	buildPerlinNoiseGui();
+	if (ImGui::TreeNode("Build Complete Terrain"))
+	{
+		buildCompleteTerrain();
+
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Play with Terrain Features"))
+	{
+		buildFaultingGui();
+		buildParticleDepoGui();
+		buildPerlinNoiseGui();
+
+		ImGui::TreePop();
+	}
+}
+
+void App1::buildCompleteTerrain()
+{
+	ImGui::Text("Ensure the Perlin Noise Tree");
+	ImGui::Text("is Open in Terrain Features Below");
+	if (ImGui::Button("Build Complete Terrain"))
+	{
+		newRandomNoise = true;
+		runAllOctaves = true;
+		fBmOctaves = rand() % 10 + 1;
+	}
+}
+
+void App1::buildSmoothingGui()
+{
+	if (ImGui::Button("Smooth Terrain"))
+	{
+		terrainMesh->smoothTerrain();
+		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
+	}
 }
 
 void App1::buildFaultingGui()
@@ -498,20 +531,24 @@ void App1::buildPerlinNoiseGui()
 		terrainMesh->setPerlinTerraced(terracedPerlinToggle);
 
 		// Cumulatively add noise to the existing noise map with the current freq and scale vals
+		ImGui::Text("This Cumulatively Adds To The Existing");
+		ImGui::Text("Map Using The Noise Type Selected");
 		if (ImGui::Button("Generate/Add Fixed Noise"))
 		{
 			addFixedNoise = true;
 		}
 
-		ImGui::SameLine();		ImGui::Text("This Cumulatively Adds To The Existing Map Using The Noise Type Selected");
+		//ImGui::SameLine();
 
 		// Generate a new random map
+		ImGui::Text("This Generates An Entirely New Map With Random");
+		ImGui::Text("Freq/Scale Using The Noise Type Selected");
 		if (ImGui::Button("Generate New Random Noise"))
 		{
 			newRandomNoise = true;
 		}
 
-		ImGui::SameLine();		ImGui::Text("This Generates An Entirely New Map With Random Freq/Scale Using The Noise Type Selected");
+		//ImGui::SameLine();
 
 		// ############################### FRACTIONAL BROWNIAN MOTION STUFF ###############################
 
@@ -533,15 +570,6 @@ void App1::buildPerlinNoiseGui()
 		}
 
 		ImGui::TreePop();
-	}
-}
-
-void App1::buildSmoothingGui()
-{
-	if (ImGui::Button("Smooth Terrain"))
-	{
-		terrainMesh->smoothTerrain();
-		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 	}
 }
 
