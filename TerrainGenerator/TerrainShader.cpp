@@ -42,9 +42,11 @@ TerrainShader::~TerrainShader()
 void TerrainShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilename)
 {
 	D3D11_BUFFER_DESC matrixBufferDesc;
-	D3D11_SAMPLER_DESC samplerDesc;
 	D3D11_BUFFER_DESC lightBufferDesc;
 	D3D11_BUFFER_DESC nosieStyleBufferDesc;
+	D3D11_BUFFER_DESC texturingBoundsBufferDesc;
+
+	D3D11_SAMPLER_DESC samplerDesc;
 
 	// Load (+ compile) shader files
 	loadVertexShader(vsFilename);
@@ -89,7 +91,14 @@ void TerrainShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilen
 	nosieStyleBufferDesc.MiscFlags = 0;
 	nosieStyleBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&lightBufferDesc, NULL, &noiseStyleBuffer);
-
+	
+	texturingBoundsBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	texturingBoundsBufferDesc.ByteWidth = sizeof(TextureBoundsBufferType);
+	texturingBoundsBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	texturingBoundsBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	texturingBoundsBufferDesc.MiscFlags = 0;
+	texturingBoundsBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&lightBufferDesc, NULL, &texturingBoundsBuffer);
 }
 
 
@@ -101,7 +110,9 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	ID3D11ShaderResourceView* texture2,
 	ID3D11ShaderResourceView* texture3,
 	Light* light,
-	float style)
+	float style,
+	XMFLOAT4 normalTexturingBounds,
+	XMFLOAT4 ridgedTexturingBounds)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -139,6 +150,21 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	noiseStylePtr->noisePadding = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	deviceContext->Unmap(noiseStyleBuffer, 0);
 	deviceContext->PSSetConstantBuffers(1, 1, &noiseStyleBuffer);
+
+	TextureBoundsBufferType* texturingBoundsPtr;
+	deviceContext->Map(texturingBoundsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	texturingBoundsPtr = (TextureBoundsBufferType*)mappedResource.pData;
+	texturingBoundsPtr->N_sandLowerBound = normalTexturingBounds.x;
+	texturingBoundsPtr->N_sandUpperbound = normalTexturingBounds.y;
+	texturingBoundsPtr->N_grassLowerBound = normalTexturingBounds.z;
+	texturingBoundsPtr->N_grassUpperBound = normalTexturingBounds.w;
+
+	texturingBoundsPtr->R_sandLowerBound = ridgedTexturingBounds.x;
+	texturingBoundsPtr->R_sandUpperbound = ridgedTexturingBounds.y;
+	texturingBoundsPtr->R_grassLowerBound = ridgedTexturingBounds.z;
+	texturingBoundsPtr->R_grassUpperBound = ridgedTexturingBounds.w;
+	deviceContext->Unmap(texturingBoundsBuffer, 0);
+	deviceContext->PSSetConstantBuffers(2, 1, &texturingBoundsBuffer);
 
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &texture1);

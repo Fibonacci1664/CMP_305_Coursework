@@ -358,14 +358,26 @@ bool App1::render()
 
 void App1::renderTerrain()
 {
+	XMFLOAT4 normalTextBoundValues;
+	normalTextBoundValues.x = N_sandLowerBound;
+	normalTextBoundValues.y = N_sandUpperbound;
+	normalTextBoundValues.z = N_grassLowerBound;
+	normalTextBoundValues.w = N_grassUpperBound;
+
+	XMFLOAT4 ridgedTextBoundValues;
+	ridgedTextBoundValues.x = R_sandLowerBound;
+	ridgedTextBoundValues.y = R_sandUpperbound;
+	ridgedTextBoundValues.z = R_grassLowerBound;
+	ridgedTextBoundValues.w = R_grassUpperBound;
+
 	worldMatrix *= XMMatrixTranslation(-125.0f, 2.0f, -125.0f);
 
 	terrainMesh->sendData(renderer->getDeviceContext());
 
 	terrainShader->setShaderParameters(renderer->getDeviceContext(),
 		worldMatrix, viewMatrix, projectionMatrix,
-		textureMgr->getTexture(L"snow"), textureMgr->getTexture(L"grass"), textureMgr->getTexture(L"sand"),
-		dirLight, noiseStyleValue);
+		textureMgr->getTexture(L"snow"), textureMgr->getTexture(L"grass"), textureMgr->getTexture(L"water"),
+		dirLight, noiseStyleValue, normalTextBoundValues, ridgedTextBoundValues);
 
 	terrainShader->render(renderer->getDeviceContext(), terrainMesh->getIndexCount());
 
@@ -444,6 +456,8 @@ void App1::gui()
 		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 	}
 
+	
+
 	buildSmoothingGui();
 	buildAllGuiOptions();
 
@@ -457,6 +471,7 @@ void App1::loadTextures()
 	textureMgr->loadTexture(L"brick", L"resources/textures/snow.png");
 	textureMgr->loadTexture(L"grass", L"resources/textures/grass.png");
 	textureMgr->loadTexture(L"sand", L"resources/textures/sand.png");
+	textureMgr->loadTexture(L"water", L"resources/textures/water.png");
 	/*textureMgr->loadTexture(L"bark", L"resources/textures/bark.png");
 	textureMgr->loadTexture(L"leaf", L"resources/textures/leaf.png");*/
 	textureMgr->loadTexture(L"goldLeaf", L"resources/textures/golden_leaf.png");
@@ -502,9 +517,11 @@ void App1::initGUIVars()
 	// For Faulting
 	loopFaulting = false;
 	runFaultingIterations = false;
+
 	// For Particle Depo
 	loopParticleDepo = false;
 	runParticleDepoIterations = false;
+
 	// For Perlin Noise and fBm
 	newRandomNoise = false;
 	addFixedNoise = false;
@@ -524,10 +541,54 @@ void App1::initGUIVars()
 	perlinFreq = 0.2f;
 	perlinScale = 0.2f;
 	amplitude = 5.0f;
+
+	N_sandLowerBound = 0.0f;
+	N_sandUpperbound = 3.0f;
+	N_grassLowerBound = 3.0f;
+	N_grassUpperBound = 7.0f;
+
+	R_sandLowerBound = -15.0f;
+	R_sandUpperbound = -5.0f;
+	R_grassLowerBound = -5.0f;
+	R_grassUpperBound = -0.5f;
 }
 
 void App1::buildAllGuiOptions()
 {
+	if (ImGui::TreeNode("Hydraulic Erosion"))
+	{
+		ImGui::Text("You Must Build A Terrain First!");
+
+		ImGui::Text("Change these values to change the look of the erosion");
+
+		ImGui::SliderInt("Cycles", &erosionIterations, 250000, 500000);
+		ImGui::SliderInt("Erosion Radius", &erosionRadius, 2.0, 3.0);
+		ImGui::SliderFloat("Inertia", &inertia, 0.001, 0.999);
+		ImGui::SliderFloat("Sediment Capacity", &sedimentCapacity, 1.0, 5.0);
+		ImGui::SliderFloat("Erosion Speed", &erodeSpeed, 0.001, 10.0);
+		ImGui::SliderFloat("Deposition Speed", &depositSpeed, 0.001, 3.0);
+		ImGui::SliderFloat("Water Evaporation Speed", &evaporateSpeed, 0.001, 3.0);
+		ImGui::SliderFloat("Gravity", &gravity, 0.1, 5.0);
+		ImGui::SliderInt("Max Particle Lifetime", &maxDropletLifetime, 5, 50);
+
+		terrainMesh->setErosionRad(erosionRadius);
+		terrainMesh->setInertia(inertia);
+		terrainMesh->setSedimentCap(sedimentCapacity);
+		terrainMesh->setErosionSpeed(erodeSpeed);
+		terrainMesh->setDepositSpeed(depositSpeed);
+		terrainMesh->setEvapSpeed(evaporateSpeed);
+		terrainMesh->setGravity(gravity);
+		terrainMesh->setMaxParticleLifetime(maxDropletLifetime);
+
+		if (ImGui::Button("Erode Terrain"))
+		{
+			terrainMesh->erodeTerrain(timer->getTime(), erosionIterations);
+			terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
+		}
+
+		ImGui::TreePop();
+	}
+	
 	if (ImGui::TreeNode("Build Complete Terrain"))
 	{
 		buildCompleteTerrain();
@@ -562,6 +623,18 @@ void App1::buildCompleteTerrain()
 		runAllOctaves = true;
 		fBmOctaves = rand() % 10 + 1;
 	}
+
+	ImGui::Text("Use with Normal or Terraced Noise Height Map");
+	ImGui::SliderFloat("Sand Lower Bound", &N_sandLowerBound, -20.0, 20.0);
+	ImGui::SliderFloat("Sand Upper Bound", &N_sandUpperbound, -20.0, 20.0);
+	ImGui::SliderFloat("Grass Lower Bound", &N_grassLowerBound, -20.0, 20.0);
+	ImGui::SliderFloat("Grass Upper Bound", &N_grassUpperBound, -20.0, 20.0);
+
+	ImGui::Text("Use with Ridged Noise Height Map");
+	ImGui::SliderFloat("Ridged Sand Lower Bound", &R_sandLowerBound, -20.0, 20.0);
+	ImGui::SliderFloat("Ridged Sand Upper Bound", &R_sandUpperbound, -25.0, 20.0);
+	ImGui::SliderFloat("Ridged Grass Lower Bound", &R_grassLowerBound, -20.0, 20.0);
+	ImGui::SliderFloat("Ridged Grass Upper Bound", &R_grassUpperBound, -20.0, 20.0);
 }
 
 void App1::buildSmoothingGui()

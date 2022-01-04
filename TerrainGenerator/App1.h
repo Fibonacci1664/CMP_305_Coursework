@@ -93,6 +93,16 @@ private:
 	int particleDepoIterations;
 	int fBmOctaves;
 
+	float N_sandLowerBound;
+	float N_sandUpperbound;
+	float N_grassLowerBound;
+	float N_grassUpperBound;
+
+	float R_sandLowerBound;
+	float R_sandUpperbound;
+	float R_grassLowerBound;
+	float R_grassUpperBound;
+
 	// L-system
 	CylinderMesh* m_Cylinder;
 	Leaf* quadLeaf;
@@ -116,6 +126,20 @@ private:
 	float btmRad = 0.1f;
 
 	bool build3DCylTreeToggle;
+
+	// Hydraulic Erosion
+	int erosionIterations = 250000;
+	int erosionRadius = 3;
+	float inertia = 0.05f; // At zero, water will instantly change direction to flow downhill. At 1, water will never change direction. 
+	float sedimentCapacity = 1.5f; // Multiplier for how much sediment a droplet can carry
+	float minSedimentCapacity = 0.01f; // Used to prevent carry capacity getting too close to zero on flatter terrain
+	float erodeSpeed = 0.3f;
+	float depositSpeed = 0.3f;
+	float evaporateSpeed = 0.01f;
+	float gravity = 0.5f;
+	int maxDropletLifetime = 30;	// This ensures we do not get 'immortal' particles roaming around
+	//float initialWaterVolume = 1.0f;		// This part of the particle
+	float initialSpeed = 1.0f;
 
 	// GUI vals
 	float perlinFreq;

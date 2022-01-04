@@ -34,7 +34,6 @@
     <ClCompile Include="PerlinNoise.cpp" />
     <ClCompile Include="Smoothing.cpp" />
     <ClCompile Include="Terrain.cpp" />
-    <ClCompile Include="TerrainMesh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h" />
@@ -44,6 +43,7 @@
     <ClInclude Include="Leaf.h" />
     <ClInclude Include="LeafShader.h" />
     <ClInclude Include="LightShader.h" />
+    <ClInclude Include="Particle.h" />
     <ClInclude Include="TerrainShader.h" />
     <ClInclude Include="Line.h" />
     <ClInclude Include="LSystem.h" />
@@ -52,7 +52,6 @@
     <ClInclude Include="PerlinNoise.h" />
     <ClInclude Include="Smoothing.h" />
     <ClInclude Include="Terrain.h" />
-    <ClInclude Include="TerrainMesh.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\leaf_ps.hlsl">
