@@ -33,7 +33,7 @@ public:
 	void genPerlinNoise();
 	void generatefBm();
 	void smoothTerrain();
-	void erodeTerrain(float dt, int cycles);                 //Perform n erosion cycles
+	void erodeTerrain(int cycles);                 //Perform n erosion cycles
 	HeightAndGradient calculateHeightAndGradient(float heightMap[], int mapSize, float posX, float posZ);
 	void initializeBrushIndices(int mapSize, int radius);
 
@@ -46,7 +46,6 @@ public:
 	float getPerlinFreq();
 	float getPerlinAmplitude();
 
-
 	void setErosionRad(int newRad);
 	void setInertia(float newInertia);
 	void setSedimentCap(float newCapacity);
@@ -55,7 +54,6 @@ public:
 	void setEvapSpeed(float newEvapSpeed);
 	void setGravity(float newGravity);
 	void setMaxParticleLifetime(int newLifetime);
-
 
 private:
 	void initTerrain(int& newResolution, ID3D11Device* device, ID3D11DeviceContext* deviceContext);
@@ -97,38 +95,17 @@ private:
 
 	// Seb L
 	int erosionRadius = 3;
-	float inertia = 0.05f; // At zero, water will instantly change direction to flow downhill. At 1, water will never change direction. 
-	float sedimentCapacity = 4.0f; // Multiplier for how much sediment a droplet can carry
+	float inertia = 0.8f; // At zero, water will instantly change direction to flow downhill. At 1, water will never change direction. 
+	float sedimentCapacity = 3.0f; // Multiplier for how much sediment a droplet can carry
 	float minSedimentCapacity = 0.01f; // Used to prevent carry capacity getting too close to zero on flatter terrain
-	float erodeSpeed = 0.003f;
-	float depositSpeed = 0.005f;
-	float evaporateSpeed = 0.01f;
-	float gravity = 0.9f;
-	int maxDropletLifetime = 30;	// This ensures we do not get 'immortal' particles roaming around
+	float erodeSpeed = 5.0f;
+	float depositSpeed = 0.1f;
+	float evaporateSpeed = 0.03f;
+	float gravity = 4.0f;
+	int maxDropletLifetime = 35;	// This ensures we do not get 'immortal' particles roaming around
 	//float initialWaterVolume = 1.0f;		// This part of the particle
 	float initialSpeed = 1.0f;
 
-	// Indices and weights of erosion brush precomputed for every node
-	/*int* erosionBrushIndices;
-	float* erosionBrushWeights;
-	std::vector<int*> erosionBrushIndicesVec;
-	std::vector<float*> erosionBrushWeightsVec;*/
-	
 	std::vector<std::vector<int>> erosionBrushIndicesVec;
 	std::vector<std::vector<float>> erosionBrushWeightsVec;
-
-	/*int** erosionBrushIndices;
-	float** erosionBrushWeights;*/
-
-	/*int erosionBrushIndices[512 * 512][0];
-	float erosionBrushWeights[512][512];*/
-
-	/*std::array<std::array<int, 512>, 512> erosionBrushIndices = {};
-	std::array<std::array<float, 512>, 512> erosionBrushWeights = {};*/
-
-	/*std::array<std::vector<int>, 512*512> erosionBrushIndices;
-	std::array<std::vector<float>, 512*512> erosionBrushWeights;*/
-
-	/*std::vector<std::vector<float>> erosionBrushIndices;
-	std::vector<std::vector<float>> erosionBrushWeights;*/
 };

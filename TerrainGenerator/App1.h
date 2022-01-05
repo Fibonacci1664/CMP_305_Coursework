@@ -44,6 +44,7 @@ private:
 	// Terrain Options
 	void updateTerrain();
 	void checkFaulting();
+	void checkSmoothing();
 	void checkParticleDepo();
 	void checkPerlinNoise();
 
@@ -71,6 +72,14 @@ private:
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 
 	// GUI bools
+	bool buildingFullTerrain;
+	bool smoothingValsSet = false;
+	bool fBmValsSet = false;
+	bool haveEroded = false;
+	// For Smoothing
+	bool loopSmoothing;
+	bool runSmoothingIterations;
+	 
 	// For Faulting
 	bool loopFaulting;
 	bool runFaultingIterations;
@@ -89,17 +98,18 @@ private:
 	bool runAllOctaves;
 
 	int terrainResolution;
-	int faultingIetrations;
+	int faultingIterations;
 	int particleDepoIterations;
+	int smoothingIterations;
 	int fBmOctaves;
 
-	float N_sandLowerBound;
-	float N_sandUpperbound;
+	float N_waterLowerBound;
+	float N_waterUpperbound;
 	float N_grassLowerBound;
 	float N_grassUpperBound;
 
-	float R_sandLowerBound;
-	float R_sandUpperbound;
+	float R_waterLowerBound;
+	float R_waterUpperbound;
 	float R_grassLowerBound;
 	float R_grassUpperBound;
 
@@ -130,14 +140,14 @@ private:
 	// Hydraulic Erosion
 	int erosionIterations = 250000;
 	int erosionRadius = 3;
-	float inertia = 0.05f; // At zero, water will instantly change direction to flow downhill. At 1, water will never change direction. 
-	float sedimentCapacity = 1.5f; // Multiplier for how much sediment a droplet can carry
+	float inertia = 0.8f; // At zero, water will instantly change direction to flow downhill. At 1, water will never change direction. 
+	float sedimentCapacity = 3.0f; // Multiplier for how much sediment a droplet can carry
 	float minSedimentCapacity = 0.01f; // Used to prevent carry capacity getting too close to zero on flatter terrain
-	float erodeSpeed = 0.3f;
-	float depositSpeed = 0.3f;
-	float evaporateSpeed = 0.01f;
-	float gravity = 0.5f;
-	int maxDropletLifetime = 30;	// This ensures we do not get 'immortal' particles roaming around
+	float erodeSpeed = 5.0f;
+	float depositSpeed = 0.1f;
+	float evaporateSpeed = 0.03f;
+	float gravity = 4.0f;
+	int maxDropletLifetime = 35;	// This ensures we do not get 'immortal' particles roaming around
 	//float initialWaterVolume = 1.0f;		// This part of the particle
 	float initialSpeed = 1.0f;
 

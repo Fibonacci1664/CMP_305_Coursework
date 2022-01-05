@@ -23,14 +23,14 @@ private:
 	struct TextureBoundsBufferType
 	{
 		// N = for normal height texturing
-		float N_sandLowerBound;
-		float N_sandUpperbound;
+		float N_waterLowerBound;
+		float N_waterUpperbound;
 		float N_grassLowerBound;
 		float N_grassUpperBound;
 
 		// R = for ridged height texturing
-		float R_sandLowerBound;
-		float R_sandUpperbound;
+		float R_waterLowerBound;
+		float R_waterUpperbound;
 		float R_grassLowerBound;
 		float R_grassUpperBound;
 	};

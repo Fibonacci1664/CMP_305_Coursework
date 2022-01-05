@@ -3,7 +3,7 @@
 
 Texture2D snowTex : register(t0);
 Texture2D grassTex : register(t1);
-Texture2D sandTex : register(t2);
+Texture2D waterTex : register(t2);
 SamplerState sampler0 : register(s0);
 
 cbuffer LightBuffer : register(b0)
@@ -22,14 +22,14 @@ cbuffer NoiseStyleBuffer : register(b1)
 cbuffer TextureBoundsBuffer : register(b2)
 {
     // N = for normal height texturing
-    float N_sandLowerBound;
-    float N_sandUpperbound;
+    float N_waterLowerBound;
+    float N_waterUpperbound;
     float N_grassLowerBound;
     float N_grassUpperBound;
     
     // R = for ridged height texturing
-    float R_sandLowerBound;
-    float R_sandUpperbound;
+    float R_waterLowerBound;
+    float R_waterUpperbound;
     float R_grassLowerBound;
     float R_grassUpperBound;
 };
@@ -50,7 +50,7 @@ float4 calculateLighting(float3 lightDirection, float3 normal, float4 diffuse)
     return colour;
 }
 
-float4 doNormalHeightTexturing(float height, float4 snowTexCol, float4 grassTexCol, float4 sandTexCol, float4 lightCol)
+float4 doNormalHeightTexturing(float height, float4 snowTexCol, float4 grassTexCol, float4 waterTexCol, float4 lightCol)
 {
     float4 blendTex = 0.0f;
     float lowerBound = 0.0f;        // a1
@@ -62,29 +62,28 @@ float4 doNormalHeightTexturing(float height, float4 snowTexCol, float4 grassTexC
     float heightNorm = normalize(height);
     
     // This is a max negative value to ensure that any height that has been displaced downwards
-    // is textured with sand, otherwise we run the risk of not meeting the conditions of each of these
-    // statements and therefore end up texturing with snow, the last return statement, which is of course
-    // not what should be at the bottom of a valley
-    lowerBound = N_sandLowerBound; // a1
-    upperBound = N_sandUpperbound; // a2
+    // is textured with water, otherwise we run the risk of not meeting the conditions of each of these
+    // statements and therefore end up texturing with snow, the last return statement
+    lowerBound = N_waterLowerBound; // a1
+    upperBound = N_waterUpperbound; // a2
 
-    //                      a1    a2                      b1  b2  
-    // Map boundary range [-0.2, 0.2] to lerp coeff range [0, 1]
+    //                     a1    a2                      b1  b2  
+    // Map boundary range [val, val] to lerp coeff range [0, 1]
     lerpCoeff = lowerLerpCoeff + (height - lowerBound) * (upperLerpCoeff - lowerLerpCoeff) / (upperBound - lowerBound);
     
     // If at the boundary of this current tex and the next one, then blend between them
-    // blend between sand and grass
+    // blend between water and grass
     if (height <= 0.0f || (height >= lowerBound && height <= upperBound))
     {
-        blendTex = lerp(sandTexCol, grassTexCol, lerpCoeff);
+        blendTex = lerp(waterTexCol, grassTexCol, lerpCoeff);
         return saturate(lightCol) * blendTex;
     }
 
     lowerBound = N_grassLowerBound; // a1
     upperBound = N_grassUpperBound; // a2
        
-    //                      a1    a2                      b1  b2  
-    // Map boundary range [-0.2, 0.2] to lerp coeff range [0, 1]
+    //                     a1    a2                      b1  b2  
+    // Map boundary range [val, val] to lerp coeff range [0, 1]
     lerpCoeff = lowerLerpCoeff + (height - lowerBound) * (upperLerpCoeff - lowerLerpCoeff) / (upperBound - lowerBound);
     
     // Blend between grass and snow
@@ -98,7 +97,7 @@ float4 doNormalHeightTexturing(float height, float4 snowTexCol, float4 grassTexC
     return saturate(lightCol) * snowTexCol;
 }
 
-float4 doRidgedHeightTexturing(float height, float4 snowTexCol, float4 grassTexCol, float4 sandTexCol, float4 lightCol)
+float4 doRidgedHeightTexturing(float height, float4 snowTexCol, float4 grassTexCol, float4 waterTexCol, float4 lightCol)
 {
     float4 blendTex = 0.0f;
     float lowerBound = 0.0f; // a1
@@ -109,22 +108,18 @@ float4 doRidgedHeightTexturing(float height, float4 snowTexCol, float4 grassTexC
    
     float heightNorm = normalize(height);
     
-    // This is a max negative value to ensure that any height that has been displaced downwards
-    // is textured with sand, otherwise we run the risk of not meeting the conditions of each of these
-    // statements and therefore end up texturing with snow, the last return statement, which is of course
-    // not what should be at the bottom of a valley, at least not in this world.
-    lowerBound = R_sandLowerBound; // a1
-    upperBound = R_sandUpperbound; // a2
+    lowerBound = R_waterLowerBound; // a1
+    upperBound = R_waterUpperbound; // a2
 
-    //                      a1     a2                       b1  b2  
-    // Map boundary range [-15.0, -5.0] to lerp coeff range [0, 1]
+    //                     a1    a2                      b1  b2  
+    // Map boundary range [val, val] to lerp coeff range [0, 1]
     lerpCoeff = lowerLerpCoeff + (height - lowerBound) * (upperLerpCoeff - lowerLerpCoeff) / (upperBound - lowerBound);
     
     // If at the boundary of this current tex and the next one, then blend between them
-    // blend between sand and grass
+    // blend between water and grass
     if (height >= lowerBound && height <= upperBound)
     {
-        blendTex = lerp(sandTexCol, grassTexCol, lerpCoeff);
+        blendTex = lerp(waterTexCol, grassTexCol, lerpCoeff);
         return saturate(lightCol) * blendTex;
     }
 
@@ -150,7 +145,7 @@ float4 main(InputType input) : SV_TARGET
 {
     float4 snowTexCol = snowTex.Sample(sampler0, input.tex);
     float4 grassTexCol = grassTex.Sample(sampler0, input.tex);
-    float4 sandTexCol = sandTex.Sample(sampler0, input.tex);
+    float4 waterTexCol = waterTex.Sample(sampler0, input.tex);
     
     float4 lightCol = calculateLighting(-lightDirection, input.normal, diffuseColour);
     
@@ -162,14 +157,14 @@ float4 main(InputType input) : SV_TARGET
     if (noiseStyle == 1)
     {
         // Do ridged height based texturing
-        return doRidgedHeightTexturing(height, snowTexCol, grassTexCol, sandTexCol, lightCol);
+        return doRidgedHeightTexturing(height, snowTexCol, grassTexCol, waterTexCol, lightCol);
         
         // For Debug
         //return float4(input.normal, 1.0f);
     }
     
     // Do normal height based texturing for both normal noise and terraced noise
-    return doNormalHeightTexturing(height, snowTexCol, grassTexCol, sandTexCol, lightCol);
+    return doNormalHeightTexturing(height, snowTexCol, grassTexCol, waterTexCol, lightCol);
     
     // For Debug
     //return float4(input.normal, 1.0f);

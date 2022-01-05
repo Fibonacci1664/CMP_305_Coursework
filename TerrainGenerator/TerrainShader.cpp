@@ -154,13 +154,13 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	TextureBoundsBufferType* texturingBoundsPtr;
 	deviceContext->Map(texturingBoundsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	texturingBoundsPtr = (TextureBoundsBufferType*)mappedResource.pData;
-	texturingBoundsPtr->N_sandLowerBound = normalTexturingBounds.x;
-	texturingBoundsPtr->N_sandUpperbound = normalTexturingBounds.y;
+	texturingBoundsPtr->N_waterLowerBound = normalTexturingBounds.x;
+	texturingBoundsPtr->N_waterUpperbound = normalTexturingBounds.y;
 	texturingBoundsPtr->N_grassLowerBound = normalTexturingBounds.z;
 	texturingBoundsPtr->N_grassUpperBound = normalTexturingBounds.w;
 
-	texturingBoundsPtr->R_sandLowerBound = ridgedTexturingBounds.x;
-	texturingBoundsPtr->R_sandUpperbound = ridgedTexturingBounds.y;
+	texturingBoundsPtr->R_waterLowerBound = ridgedTexturingBounds.x;
+	texturingBoundsPtr->R_waterUpperbound = ridgedTexturingBounds.y;
 	texturingBoundsPtr->R_grassLowerBound = ridgedTexturingBounds.z;
 	texturingBoundsPtr->R_grassUpperBound = ridgedTexturingBounds.w;
 	deviceContext->Unmap(texturingBoundsBuffer, 0);

@@ -282,10 +282,10 @@ void Terrain::generateTerrain(ID3D11Device* device, ID3D11DeviceContext* deviceC
 	}
 
 	// Release the arrays now that the buffers have been created and loaded.
-	/*delete[] vertices;
+	delete[] vertices;
 	vertices = 0;
 	delete[] indices;
-	indices = 0;*/
+	indices = 0;
 }
 
 void Terrain::buildTerrain()
@@ -344,7 +344,7 @@ void Terrain::createBuffers(ID3D11Device* device, VertexType* vertices, unsigned
 
 // ###################### GENERATE TERRAIN EFFECTS ######################
 
-void Terrain::erodeTerrain(float dt, int cycles)
+void Terrain::erodeTerrain(int cycles)
 {
 	// https://www.firespark.de/resources/downloads/implementation%20of%20a%20methode%20for%20hydraulic%20erosion.pdf
 	// TRY AGAIN!
@@ -493,7 +493,9 @@ void Terrain::erodeTerrain(float dt, int cycles)
 			}
 
 			// Update droplet's speed and water content
-			speed = sqrt(speed * speed + deltaHeight * deltaHeight * gravity);
+			// This can be +/- to represent when the particle may be flowing up/downhill
+			// with either a pos/neg vel
+			speed = speed * speed + deltaHeight * gravity;
 			waterVolume *= (1 - evaporateSpeed);
 		}
 	}
@@ -508,59 +510,22 @@ HeightAndGradient Terrain::calculateHeightAndGradient(float heightMap[], int map
 	float xOffset = posX - coordX;
 	float zOffset = posZ - coordZ;
 
-	// ############################# MY BILINEAR INTER #############################
-
 	// Bilinear Interpolation
 	// https://x-engineer.org/bilinear-interpolation/
 	// https://blogs.sas.com/content/iml/2020/05/18/what-is-bilinear-interpolation.html
 
 	/*
 	*			--->
-	* (0,1)	NW	 |		NE (1,1)
+	* (0,0)	NW	 |		NE (1,0)
 	*		*----*p1----*
 	*		|	 |		|
 	*	 --------*p3--------
 	*		|	 |		|
 	*		|	 |		|
-	* (0,0)	*----*p2-----* (1,0)
+	* (0,1)	*----*p2-----* (1,1)
 	*		SW	 |		SE 
 	*			--->
-	* 
-	* 
-	* x1 = 0 
-	*		--> SW
-	* y1 = 0
-	* x2 = 1
-	*		--> NE
-	* y2 = 1
 	*/
-
-	// Calculate heights of the four nodes of the Particles cell
-	// SW is the (0,0) position
-	/*int zeroZeroNode = coordZ * mapSize + coordX;
-
-	float heightSW = heightMap[zeroZeroNode];
-	float heightNW = heightMap[zeroZeroNode - mapSize];
-	float heightSE = heightMap[zeroZeroNode + 1];
-	float heightNE = heightMap[zeroZeroNode - mapSize + 1];*/
-
-	// Calculate droplet's direction of flow with bilinear interpolation of height difference along the edges
-	// Formula = R1(x, y) = Q11 · (x2 – x) / (x2 – x1) + Q21 · (x – x1) / (x2 – x1)
-	// float southPos = heightSW * (1 - xOffset) / (1 - 0) + heightSE * (xOffset - 0) / (1 - 0);	// Find point p2
-	// This can be simplified
-	//float southPos = heightSW * (1 - xOffset) + heightSE * xOffset;									// Find point p2
-
-	// Formula = R2(x, y) = Q12 · (x2 – x) / (x2 – x1) + Q22 · (x – x1) / (x2 – x1)
-	//float northPos = heightNW * (1 - xOffset) / (1 - 0) + heightNE * (xOffset - 0) / (1 - 0);		// Find point p1
-	// Again this can be simplified
-	//float northPos = heightNW * (1 - xOffset) + heightNE * xOffset;									// Find point p1
-
-	// Formula = P(x, y) = R1 · (y2 – y) / (y2 – y1) + R2 · (y – y1) / (y2 – y1)
-	//float interPos = southPos * (1 - zOffset) / (1 - 0) + northPos * (zOffset - 0) / (1 - 0);		// Find the interpolated point
-	// And again this can be simplified
-	//float interPos = southPos * (1 - zOffset) + northPos * zOffset;									// Find the interpolated point
-
-	// ############################# MY BILINEAR INTER END #############################
 
 	// Calculate heights of the four nodes of the droplet's cell
 	int nodeIndexNW = coordZ * mapSize + coordX;
@@ -586,9 +551,6 @@ HeightAndGradient Terrain::calculateHeightAndGradient(float heightMap[], int map
 
 void Terrain::initializeBrushIndices(int mapSize, int radius)
 {
-	/*erosionBrushIndices = new int[mapSize * mapSize];
-	erosionBrushWeights = new float[mapSize * mapSize];*/
-
 	int size = mapSize * mapSize;
 
 	erosionBrushIndicesVec.resize(size);
@@ -598,9 +560,6 @@ void Terrain::initializeBrushIndices(int mapSize, int radius)
 	std::vector<int> zOffsets;
 	std::vector<float> weights;
 
-	/*int* xOffsets = new int[radius * radius * 4];
-	int* zOffsets = new int[radius * radius * 4];
-	float* weights = new float[radius * radius * 4];*/
 	float weightSum = 0;
 	int addIndex = 0;
 
@@ -629,15 +588,9 @@ void Terrain::initializeBrushIndices(int mapSize, int radius)
 						{
 							float weight = 1 - sqrt(sqrDst) / radius;
 							weightSum += weight;
-
 							weights.push_back(weight);
 							xOffsets.push_back(x);
 							zOffsets.push_back(z);
-
-							/*weights[addIndex] = weight;
-							xOffsets[addIndex] = x;
-							zOffsets[addIndex] = z;*/
-
 							addIndex++;
 						}
 					}
@@ -647,17 +600,11 @@ void Terrain::initializeBrushIndices(int mapSize, int radius)
 
 		int numEntries = addIndex;
 
-		/*int* erosionBrushIndicesArr = new int[numEntries];
-		float* erosionBrushWeightsArr = new float[numEntries];*/
-
 		std::vector<int> tempBrushVec;
 		std::vector<float> tempWeightsVec;
 
 		for (int j = 0; j < numEntries; j++)
-		{
-			/*erosionBrushIndicesArr[j] = (zOffsets[j] + centreZ) * mapSize + xOffsets[j] + centreX;
-			erosionBrushWeightsArr[j] = weights[j] / weightSum;*/
-			
+		{			
 			tempBrushVec.push_back((zOffsets[j] + centreZ) * mapSize + xOffsets[j] + centreX);
 			tempWeightsVec.push_back(weights[j] / weightSum);
 		}

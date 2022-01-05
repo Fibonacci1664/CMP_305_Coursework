@@ -58,9 +58,10 @@ App1::~App1()
 
 void App1::updateTerrain()
 {
+	checkPerlinNoise();
 	checkFaulting();
+	checkSmoothing();
 	checkParticleDepo();
-	checkPerlinNoise();	
 }
 
 void App1::checkFaulting()
@@ -70,15 +71,32 @@ void App1::checkFaulting()
 		terrainMesh->generateFault();
 		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 	}
-	else if (runFaultingIterations && faultingIetrations > 0)
+	else if (runFaultingIterations && faultingIterations > 0)
 	{
 		terrainMesh->generateFault();
 
-		--faultingIetrations;
+		--faultingIterations;
 
-		if (faultingIetrations == 0)
+		if (faultingIterations == 0)
 		{
 			runFaultingIterations = false;
+		}
+
+		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
+	}
+}
+
+void App1::checkSmoothing()
+{
+	if (runSmoothingIterations && smoothingIterations > 0)
+	{
+		terrainMesh->smoothTerrain();
+
+		--smoothingIterations;
+
+		if (smoothingIterations == 0)
+		{
+			runSmoothingIterations = false;
 		}
 
 		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
@@ -123,7 +141,7 @@ void App1::checkPerlinNoise()
 		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 
 		// These max min rnage values must be the same as the max min GUI values
-		const float MIN_RAND = 0.1f, MAX_RAND = 0.2f;
+		const float MIN_RAND = 0.05f, MAX_RAND = 0.15f;
 		const float range = MAX_RAND - MIN_RAND;
 		float randomFreq = range * ((((double)rand()) / (double)RAND_MAX)) + MIN_RAND;
 		float randomScale = range * ((((double)rand()) / (double)RAND_MAX)) + MIN_RAND;
@@ -359,14 +377,14 @@ bool App1::render()
 void App1::renderTerrain()
 {
 	XMFLOAT4 normalTextBoundValues;
-	normalTextBoundValues.x = N_sandLowerBound;
-	normalTextBoundValues.y = N_sandUpperbound;
+	normalTextBoundValues.x = N_waterLowerBound;
+	normalTextBoundValues.y = N_waterUpperbound;
 	normalTextBoundValues.z = N_grassLowerBound;
 	normalTextBoundValues.w = N_grassUpperBound;
 
 	XMFLOAT4 ridgedTextBoundValues;
-	ridgedTextBoundValues.x = R_sandLowerBound;
-	ridgedTextBoundValues.y = R_sandUpperbound;
+	ridgedTextBoundValues.x = R_waterLowerBound;
+	ridgedTextBoundValues.y = R_waterUpperbound;
 	ridgedTextBoundValues.z = R_grassLowerBound;
 	ridgedTextBoundValues.w = R_grassUpperBound;
 
@@ -433,10 +451,11 @@ void App1::gui()
 
 	// Build UI
 	ImGui::Text("FPS: %.2f", timer->getFPS());
+	ImGui::Text("Terrain Resolution: %d", 512);
 	ImGui::Text("Camera Pos: (%.2f, %.2f, %.2f)", camera->getPosition().x, camera->getPosition().y, camera->getPosition().z);
 	ImGui::Text("Camera Rot: (%.2f, %.2f, %.2f)", camera->getRotation().x, camera->getRotation().y, camera->getRotation().z);
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
-	ImGui::SliderInt("Terrain Resolution", &terrainResolution, 512, 1024);
+	//ImGui::SliderInt("Terrain Resolution", &terrainResolution, 512, 1024);
 
 	// Resize the terrain to a new resolution
 	if (ImGui::Button("Resize Terrain"))
@@ -455,8 +474,6 @@ void App1::gui()
 		terrainMesh->resetTerrain();
 		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 	}
-
-	
 
 	buildSmoothingGui();
 	buildAllGuiOptions();
@@ -507,13 +524,18 @@ void App1::initDirLight()
 
 void App1::initCam()
 {
-	camera->setPosition(-230.22f, 119.64f, -206.92f);
-	camera->setRotation(20.25f, 37.75f, 0.00f);
+	camera->setPosition(-259.91f, 167.86f, -237.27f);
+	camera->setRotation(23.00f, 33.25f, 0.00f);
 }
 
 void App1::initGUIVars()
 {
 	// Bools
+	buildingFullTerrain = false;
+	// For Smoothing
+	loopSmoothing = false;
+	runSmoothingIterations = false;
+
 	// For Faulting
 	loopFaulting = false;
 	runFaultingIterations = false;
@@ -533,7 +555,8 @@ void App1::initGUIVars()
 
 	// Ints
 	terrainResolution = 512;
-	faultingIetrations = 0;
+	faultingIterations = 0;
+	smoothingIterations = 0;
 	particleDepoIterations = 0;
 	fBmOctaves = 0;
 
@@ -542,13 +565,13 @@ void App1::initGUIVars()
 	perlinScale = 0.2f;
 	amplitude = 5.0f;
 
-	N_sandLowerBound = 0.0f;
-	N_sandUpperbound = 3.0f;
+	N_waterLowerBound = 0.0f;
+	N_waterUpperbound = 3.0f;
 	N_grassLowerBound = 3.0f;
 	N_grassUpperBound = 7.0f;
 
-	R_sandLowerBound = -15.0f;
-	R_sandUpperbound = -5.0f;
+	R_waterLowerBound = -15.0f;
+	R_waterUpperbound = -5.0f;
 	R_grassLowerBound = -5.0f;
 	R_grassUpperBound = -0.5f;
 }
@@ -558,18 +581,19 @@ void App1::buildAllGuiOptions()
 	if (ImGui::TreeNode("Hydraulic Erosion"))
 	{
 		ImGui::Text("You Must Build A Terrain First!");
+		ImGui::Text("Hydralic Erosion works with Normal and Terraced Terrains ONLY! NOT Ridged!");
 
 		ImGui::Text("Change these values to change the look of the erosion");
 
 		ImGui::SliderInt("Cycles", &erosionIterations, 250000, 500000);
-		ImGui::SliderInt("Erosion Radius", &erosionRadius, 2.0, 3.0);
+		ImGui::SliderInt("Erosion Radius", &erosionRadius, 3.0, 10.0);
 		ImGui::SliderFloat("Inertia", &inertia, 0.001, 0.999);
 		ImGui::SliderFloat("Sediment Capacity", &sedimentCapacity, 1.0, 5.0);
 		ImGui::SliderFloat("Erosion Speed", &erodeSpeed, 0.001, 10.0);
 		ImGui::SliderFloat("Deposition Speed", &depositSpeed, 0.001, 3.0);
-		ImGui::SliderFloat("Water Evaporation Speed", &evaporateSpeed, 0.001, 3.0);
-		ImGui::SliderFloat("Gravity", &gravity, 0.1, 5.0);
-		ImGui::SliderInt("Max Particle Lifetime", &maxDropletLifetime, 5, 50);
+		ImGui::SliderFloat("Water Evaporation Speed", &evaporateSpeed, 0.001, 1.0);
+		ImGui::SliderFloat("Gravity", &gravity, 4.0, 10.0);
+		ImGui::SliderInt("Max Particle Lifetime", &maxDropletLifetime, 20, 50);
 
 		terrainMesh->setErosionRad(erosionRadius);
 		terrainMesh->setInertia(inertia);
@@ -582,8 +606,15 @@ void App1::buildAllGuiOptions()
 
 		if (ImGui::Button("Erode Terrain"))
 		{
-			terrainMesh->erodeTerrain(timer->getTime(), erosionIterations);
+			ImGui::Text("Please Wait...");
+			terrainMesh->erodeTerrain(erosionIterations);
 			terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
+
+			// Hard set the texture bounds for a textured terrain with white shorelines to imitate sea foam
+			N_waterLowerBound = 1.983f;
+			N_waterUpperbound = 3.0f;		// Swap this value with the next to remove the white shorelines
+			N_grassLowerBound = 0.0f;
+			N_grassUpperBound = 20.0f;
 		}
 
 		ImGui::TreePop();
@@ -619,22 +650,86 @@ void App1::buildCompleteTerrain()
 	ImGui::Text("is Open in Terrain Features Below");
 	if (ImGui::Button("Build Complete Terrain"))
 	{
+		buildingFullTerrain = true;
+		smoothingValsSet = false;
+		fBmValsSet = false;
+		haveEroded = false;
+
+		// Reset the texture bounds to defaults when generating a new terrian
+		N_waterLowerBound = 0.0f;
+		N_waterUpperbound = 3.0f;
+		N_grassLowerBound = 3.0f;
+		N_grassUpperBound = 7.0f;
+
+		// ########################### ADD NOISE ###########################
 		newRandomNoise = true;
-		runAllOctaves = true;
-		fBmOctaves = rand() % 10 + 1;
+		// ########################### ADD FAULTING ###########################
+		// Random value
+		faultingIterations = rand() % 150 + 50;
+		// Set Value
+		//faultingIterations = 200;
+		runFaultingIterations = true;
 	}
 
+	if (buildingFullTerrain)
+	{
+		// If we're finished faulting, AND we have not yet set smoothing values, then do so
+		if (!runFaultingIterations && !smoothingValsSet)
+		{
+			smoothingValsSet = true;
+			// ########################### ADD SMOOTHING ###########################
+			// Random value
+			//smoothingIterations = rand() % 75;
+			// Set Value
+			smoothingIterations = 75;
+			runSmoothingIterations = true;
+		}
+
+		// If we're finished faulting AND smoothing, AND we have not yet set fBm values, then do so
+		if (!runFaultingIterations && !runSmoothingIterations && !fBmValsSet)
+		{
+			fBmValsSet = true;
+
+			// ########################### ADD FBM ###########################
+			// Random value
+			//fBmOctaves = rand() % 10 + 1;
+			// Set Value
+			fBmOctaves = 8;
+			runAllOctaves = true;
+		}
+
+		// If we're finished faulting AND smoothing AND fBm, AND we have not carried out erosion yet, then do so
+		if (!runFaultingIterations && !runSmoothingIterations && !runAllOctaves && !haveEroded)
+		{
+			haveEroded = true;
+
+			// ########################### ADD HYDRAULIC EROSION ###########################
+			terrainMesh->erodeTerrain(erosionIterations);
+			terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
+
+			// Hard set the texture bounds for a textured terrain with white shorelines to imitate sea foam
+			N_waterLowerBound = 1.983f;
+			N_waterUpperbound = 3.0f;		// Swap this value with the next to remove the white shorelines
+			N_grassLowerBound = 0.0f;
+			N_grassUpperBound = 20.0f;
+
+			buildingFullTerrain = false;
+		}
+	}
+
+	
+
 	ImGui::Text("Use with Normal or Terraced Noise Height Map");
-	ImGui::SliderFloat("Sand Lower Bound", &N_sandLowerBound, -20.0, 20.0);
-	ImGui::SliderFloat("Sand Upper Bound", &N_sandUpperbound, -20.0, 20.0);
+	ImGui::SliderFloat("Water Lower Bound", &N_waterLowerBound, -20.0, 20.0);
+	ImGui::SliderFloat("Water Upper Bound", &N_waterUpperbound, -20.0, 20.0);
 	ImGui::SliderFloat("Grass Lower Bound", &N_grassLowerBound, -20.0, 20.0);
-	ImGui::SliderFloat("Grass Upper Bound", &N_grassUpperBound, -20.0, 20.0);
+	ImGui::SliderFloat("Grass Upper Bound", &N_grassUpperBound, -20.0, 100.0);
 
 	ImGui::Text("Use with Ridged Noise Height Map");
-	ImGui::SliderFloat("Ridged Sand Lower Bound", &R_sandLowerBound, -20.0, 20.0);
-	ImGui::SliderFloat("Ridged Sand Upper Bound", &R_sandUpperbound, -25.0, 20.0);
+	ImGui::SliderFloat("Ridged Water Lower Bound", &R_waterLowerBound, -20.0, 20.0);
+	ImGui::SliderFloat("Ridged Water Upper Bound", &R_waterUpperbound, -25.0, 20.0);
 	ImGui::SliderFloat("Ridged Grass Lower Bound", &R_grassLowerBound, -20.0, 20.0);
-	ImGui::SliderFloat("Ridged Grass Upper Bound", &R_grassUpperBound, -20.0, 20.0);
+	ImGui::SliderFloat("Ridged Grass Upper Bound", &R_grassUpperBound, -20.0, 100.0);
 }
 
 void App1::buildSmoothingGui()
@@ -643,6 +738,27 @@ void App1::buildSmoothingGui()
 	{
 		terrainMesh->smoothTerrain();
 		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
+	}
+
+	// This slider lets the user control how many iterations of the faulting algorithm they wish to run
+	ImGui::SliderInt("Smoothing Iterations", &smoothingIterations, 2, 1000);
+
+	if (ImGui::Button("Run All Smoothing Iterations"))
+	{
+		// Reset the texture bounds to defaults when generating a new terrian
+		N_waterLowerBound = 0.0f;
+		N_waterUpperbound = 3.0f;
+		N_grassLowerBound = 3.0f;
+		N_grassUpperBound = 7.0f;
+
+		if (!loopSmoothing)
+		{
+			runSmoothingIterations = true;
+		}
+		else
+		{
+			runSmoothingIterations = false;
+		}
 	}
 }
 
@@ -690,6 +806,12 @@ void App1::buildFaultingGui()
 	{
 		if (ImGui::Button("Add Single Fault"))
 		{
+			// Reset the texture bounds to defaults when generating a new terrian
+			N_waterLowerBound = 0.0f;
+			N_waterUpperbound = 3.0f;
+			N_grassLowerBound = 3.0f;
+			N_grassUpperBound = 7.0f;
+
 			terrainMesh->generateFault();
 			terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 		}
@@ -706,6 +828,12 @@ void App1::buildFaultingGui()
 		if (state)
 		{
 			loopFaulting = true;
+
+			// Reset the texture bounds to defaults when generating a new terrian
+			N_waterLowerBound = 0.0f;
+			N_waterUpperbound = 3.0f;
+			N_grassLowerBound = 3.0f;
+			N_grassUpperBound = 7.0f;
 		}
 		else
 		{
@@ -713,10 +841,16 @@ void App1::buildFaultingGui()
 		}
 
 		// This slider lets the user control how many iterations of the faulting algorithm they wish to run
-		ImGui::SliderInt("Faulting Iterations", &faultingIetrations, 2, 1000);
+		ImGui::SliderInt("Faulting Iterations", &faultingIterations, 2, 1000);
 		
 		if (ImGui::Button("Run All Iterations"))
-		{										
+		{
+			// Reset the texture bounds to defaults when generating a new terrian
+			N_waterLowerBound = 0.0f;
+			N_waterUpperbound = 3.0f;
+			N_grassLowerBound = 3.0f;
+			N_grassUpperBound = 7.0f;
+
 			if (!loopFaulting)					
 			{
 				runFaultingIterations = true;
@@ -743,6 +877,12 @@ void App1::buildParticleDepoGui()
 	{
 		if (ImGui::Button("Add Single Particle"))
 		{
+			// Reset the texture bounds to defaults when generating a new terrian
+			N_waterLowerBound = 0.0f;
+			N_waterUpperbound = 3.0f;
+			N_grassLowerBound = 3.0f;
+			N_grassUpperBound = 7.0f;
+
 			terrainMesh->startParticleDepo();
 			terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 		}
@@ -758,6 +898,12 @@ void App1::buildParticleDepoGui()
 
 		if (state)
 		{
+			// Reset the texture bounds to defaults when generating a new terrian
+			N_waterLowerBound = 0.0f;
+			N_waterUpperbound = 3.0f;
+			N_grassLowerBound = 3.0f;
+			N_grassUpperBound = 7.0f;
+
 			loopParticleDepo = true;
 		}
 		else
@@ -770,6 +916,12 @@ void App1::buildParticleDepoGui()
 
 		if (ImGui::Button("Run All Iterations"))
 		{
+			// Reset the texture bounds to defaults when generating a new terrian
+			N_waterLowerBound = 0.0f;
+			N_waterUpperbound = 3.0f;
+			N_grassLowerBound = 3.0f;
+			N_grassUpperBound = 7.0f;
+
 			if (!loopParticleDepo)
 			{
 				runParticleDepoIterations = true;
@@ -794,9 +946,9 @@ void App1::buildPerlinNoiseGui()
 {
 	if (ImGui::TreeNode("Perlin Noise"))
 	{
-		ImGui::SliderFloat("Amplitude", &amplitude, 5.0f, 10.0f);
-		ImGui::SliderFloat("Frequency", &perlinFreq, 0.1f, 0.2f);
-		ImGui::SliderFloat("Scale", &perlinScale, 0.1f, 0.2f);
+		ImGui::SliderFloat("Amplitude", &amplitude, 5.0f, 15.0f);
+		ImGui::SliderFloat("Frequency", &perlinFreq, 0.05f, 0.15f);
+		ImGui::SliderFloat("Scale", &perlinScale, 0.05f, 0.15f);
 
 		static int algoState = 0;
 
@@ -842,8 +994,14 @@ void App1::buildPerlinNoiseGui()
 		// Cumulatively add noise to the existing noise map with the current freq and scale vals
 		ImGui::Text("This Cumulatively Adds To The Existing");
 		ImGui::Text("Map Using The Noise Type Selected");
-		if (ImGui::Button("Generate/Add Fixed Noise"))
+		if (ImGui::Button("Add Fixed Noise Using Current Freq/Scale Values"))
 		{
+			// Reset the texture bounds to defaults when generating a new terrian
+			N_waterLowerBound = 0.0f;
+			N_waterUpperbound = 3.0f;
+			N_grassLowerBound = 3.0f;
+			N_grassUpperBound = 7.0f;
+
 			addFixedNoise = true;
 		}
 
@@ -854,6 +1012,12 @@ void App1::buildPerlinNoiseGui()
 		ImGui::Text("Freq/Scale Using The Noise Type Selected");
 		if (ImGui::Button("Generate New Random Noise"))
 		{
+			// Reset the texture bounds to defaults when generating a new terrian
+			N_waterLowerBound = 0.0f;
+			N_waterUpperbound = 3.0f;
+			N_grassLowerBound = 3.0f;
+			N_grassUpperBound = 7.0f;
+
 			newRandomNoise = true;
 		}
 
@@ -865,6 +1029,12 @@ void App1::buildPerlinNoiseGui()
 		
 		if (fBmToggle)
 		{
+			// Reset the texture bounds to defaults when generating a new terrian
+			N_waterLowerBound = 0.0f;
+			N_waterUpperbound = 3.0f;
+			N_grassLowerBound = 3.0f;
+			N_grassUpperBound = 7.0f;
+
 			if (ImGui::Button("Run Single fBm Octave"))
 			{
 				runSingleOctave = true;
