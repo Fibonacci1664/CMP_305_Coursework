@@ -43,7 +43,6 @@
     <ClInclude Include="Leaf.h" />
     <ClInclude Include="LeafShader.h" />
     <ClInclude Include="LightShader.h" />
-    <ClInclude Include="Particle.h" />
     <ClInclude Include="TerrainShader.h" />
     <ClInclude Include="Line.h" />
     <ClInclude Include="LSystem.h" />
@@ -94,6 +93,9 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

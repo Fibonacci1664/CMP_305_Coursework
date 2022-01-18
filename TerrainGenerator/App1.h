@@ -1,8 +1,28 @@
-// Application.h
+/*
+ * This is the main application file which constructs the entire scene, it handles:
+ *		- Initialisation of all textures
+ *		- Initialisation of all scene objects
+ *		- Initialisation of all shaders
+ *		- Initialisation of all lights
+ *
+ *		- Processing GUI input to render various terrain features
+ *
+ *		- Rendering of the terrain, and L-System
+ *		- Rendering and updating the GUI
+ *
+ * Original @author Abertay University.
+ * Updated by @author D. Green.
+ *
+ */
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #ifndef _APP1_H
 #define _APP1_H
 
-// Includes
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// INCLUDES
 #include "DXF.h"	// include dxframework
 #include <memory>
 #include "Terrain.h"
@@ -14,7 +34,11 @@
 #include "LeafShader.h"
 #include "LightShader.h"
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 using std::unique_ptr;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class App1 : public BaseApplication
 {
@@ -47,6 +71,8 @@ private:
 	void checkSmoothing();
 	void checkParticleDepo();
 	void checkPerlinNoise();
+	void adjustedTextureBounds();
+	void initialTextureBounds();
 
 	// L-System
 	void buildLSystem();
@@ -57,7 +83,8 @@ private:
 
 	// Render functions
 	void buildAllGuiOptions();
-	void buildCompleteTerrain();
+	void buildHydErosionGui();
+	void buildCompleteTerrainGui();
 	void buildSmoothingGui();
 	void buildLSystemGUI();
 	void buildFaultingGui();
@@ -73,9 +100,10 @@ private:
 
 	// GUI bools
 	bool buildingFullTerrain;
-	bool smoothingValsSet = false;
-	bool fBmValsSet = false;
-	bool haveEroded = false;
+	bool smoothingValsSet;
+	bool fBmValsSet;
+	bool haveEroded;
+
 	// For Smoothing
 	bool loopSmoothing;
 	bool runSmoothingIterations;
@@ -138,18 +166,19 @@ private:
 	bool build3DCylTreeToggle;
 
 	// Hydraulic Erosion
-	int erosionIterations = 250000;
+	int erosionIterations = 300000;
+
 	int erosionRadius = 3;
-	float inertia = 0.8f; // At zero, water will instantly change direction to flow downhill. At 1, water will never change direction. 
-	float sedimentCapacity = 3.0f; // Multiplier for how much sediment a droplet can carry
-	float minSedimentCapacity = 0.01f; // Used to prevent carry capacity getting too close to zero on flatter terrain
-	float erodeSpeed = 5.0f;
-	float depositSpeed = 0.1f;
-	float evaporateSpeed = 0.03f;
-	float gravity = 4.0f;
-	int maxDropletLifetime = 35;	// This ensures we do not get 'immortal' particles roaming around
+	float inertia = 0.5f;					// At zero, water will instantly change direction to flow directly downhill. At 1, water will never change direction. 
+	float sedimentCapacity = 1.1f;			// Multiplier for how much sediment a droplet can carry
+	float minSedimentCapacity = 0.01f;		// Used to prevent carry capacity getting too close to zero on flatter terrain
+	float erodeSpeed = 0.5f;
+	float depositSpeed = 0.012f;
+	float evaporateSpeed = 0.012f;
+	//float gravity = 4.0f;
+	int maxDropletLifetime = 30;			// This ensures we do not get 'immortal' particles roaming around
 	//float initialWaterVolume = 1.0f;		// This part of the particle
-	float initialSpeed = 1.0f;
+	//float initialSpeed = 1.0f;
 
 	// GUI vals
 	float perlinFreq;
@@ -159,3 +188,5 @@ private:
 };
 
 #endif
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

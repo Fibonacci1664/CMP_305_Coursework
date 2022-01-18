@@ -1,8 +1,21 @@
-#include "Leaf.h"
-// Leaf Mesh
-// Simple unit quad mesh with texture coordinates and normals.
+/*
+ * This is the Leaf class it handles:
+ *		- Setting up buffers for the leaf quad
+ *
+ *
+ * Original @author Abertay University.
+ * Updated by @author D. Green.
+ * 
+ */
 
-// Initialise buffers and lad texture.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// INCLUDES
+#include "Leaf.h"
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// CONSTRUCTOR / DESTRUCTOR
 Leaf::Leaf(ID3D11Device* device, ID3D11DeviceContext* deviceContext, XMVECTOR position, float scale)
 {
 	scaleFactor = scale;
@@ -16,6 +29,8 @@ Leaf::~Leaf()
 	// Run parent deconstructor
 	BaseMesh::~BaseMesh();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Build quad mesh.
 void Leaf::initBuffers(ID3D11Device* device)
@@ -95,3 +110,5 @@ void Leaf::initBuffers(ID3D11Device* device)
 	delete[] indices;
 	indices = 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

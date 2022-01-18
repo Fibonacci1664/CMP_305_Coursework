@@ -12,9 +12,11 @@ CylinderMesh::~CylinderMesh()
 	// Run parent deconstructor
 	BaseMesh::~BaseMesh();
 }
+
 void CylinderMesh::initBuffers(ID3D11Device* device)
 {
 }
+
 // Generate cylinder.
 // Shape has texture coordinates and normals.
 void CylinderMesh::init(ID3D11Device* device, int stacks, int slices, float height, float bottomRadius, float topRadius)
@@ -96,4 +98,3 @@ void CylinderMesh::init(ID3D11Device* device, int stacks, int slices, float heig
 	vertices.clear();	
 	indices.clear();
 }
-

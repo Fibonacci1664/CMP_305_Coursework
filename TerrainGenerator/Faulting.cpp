@@ -1,6 +1,21 @@
+/*
+ * This is the Faulting class it handles:
+ *		- Executing the main algorithm for the faulting feature
+ *
+ * Original @author D. Green.
+ *
+ * © D. Green. 2022.
+ */
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// INCLUDES
 #include "Faulting.h"
 #include <cstdlib>
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// CONSTRUCTOR / DESTRUCTOR
 Faulting::Faulting(int& res, float* heightmp) : resolution(res), heightmap(heightmp)
 {
 
@@ -11,6 +26,9 @@ Faulting::~Faulting()
 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// FUNCTIONS
 void Faulting::createFault()
 {
 	// PLAN
@@ -86,7 +104,7 @@ void Faulting::createFault()
 			// Then we need to take the resultant vec from the cross product and shove it back into a float3
 			XMStoreFloat3(&returnVec, resultantVec);
 
-			// Then check the y-value of the cross prodcuts resultant float3
+			// Then check the y-value of the cross products resultant float3
 			if (returnVec.y > 0)
 			{
 				// Increment the current index pos value;
@@ -101,10 +119,14 @@ void Faulting::createFault()
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Faulting::updateHeightMap(float* newHeightMap)
 {
 	heightmap = newHeightMap;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Coord* Faulting::getPosition(int prevEdge)
 {
@@ -171,3 +193,5 @@ Coord* Faulting::getPosition(int prevEdge)
 
 	return position;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

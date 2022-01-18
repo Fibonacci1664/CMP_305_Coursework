@@ -1,5 +1,24 @@
+/*
+ * This is the Light Shader class it handles:
+ *		- Init the Light buffer
+ *		- Init the matrix buffer
+ *		- Init the texture sampler
+ *		- Init the light shader files
+ *
+ *
+ * Original @author Abertay University.
+ * Updated by @author D. Green.
+ * 
+ */
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// INCLUDES
 #include "LightShader.h"
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// CONSTRUCTOR / DESTRUCTOR
 LightShader::LightShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwnd)
 {
 	initShader(L"light_vs.cso", L"light_ps.cso");
@@ -39,6 +58,9 @@ LightShader::~LightShader()
 	BaseShader::~BaseShader();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// FUNCTIONS
 void LightShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilename)
 {
 	D3D11_BUFFER_DESC matrixBufferDesc;
@@ -82,6 +104,7 @@ void LightShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilenam
 	renderer->CreateBuffer(&lightBufferDesc, NULL, &lightBuffer);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	const XMMATRIX& worldMatrix,
@@ -123,3 +146,5 @@ void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	deviceContext->PSSetShaderResources(0, 1, &texture);
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

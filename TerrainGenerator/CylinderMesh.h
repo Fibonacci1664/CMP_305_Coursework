@@ -12,4 +12,3 @@ protected:
 	
 	void init(ID3D11Device* device, int stacks, int slices, float height, float bottomRadius, float topRadius);
 };
-

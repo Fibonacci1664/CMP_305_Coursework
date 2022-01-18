@@ -1,35 +1,31 @@
-#include <vector>
+/*
+ * This is the main application file which constructs the entire scene, it handles:
+ *		- Initialisation of all textures
+ *		- Initialisation of all scene objects
+ *		- Initialisation of all shaders
+ *		- Initialisation of all lights
+ * 
+ *		- Processing GUI input to render various terrain features
+ *
+ *		- Rendering of the terrain, and L-System
+ *		- Rendering and updating the GUI
+ *
+ * Original @author Abertay University.
+ * Updated by @author D. Green.
+ *
+ */
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// INCLUDES
+#include <vector>
 #include "App1.h"
 
+// CONSTRUCTOR / DESTRUCTOR
 App1::App1() : l_System("FA")
 {
 	noiseStyleValue = 0.0f;
 	systems.emplace("3DCylTree", false);
-}
-
-void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
-{
-	// Call super/parent init function (required!)
-	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
-
-	// Load textures
-	loadTextures();
-	
-	// Create Mesh objects
-	initSceneObjects();
-
-	// Create shader objects
-	initShaders(hwnd);
-
-	// Initialise light
-	initLights();
-
-	// Initialise camera
-	initCam();
-
-	// Init all the variables used by the GUI
-	initGUIVars();
 }
 
 App1::~App1()
@@ -56,6 +52,146 @@ App1::~App1()
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// FUNCTIONS
+void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input* in, bool VSYNC, bool FULL_SCREEN)
+{
+	// Call super/parent init function (required!)
+	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
+
+	// Load textures
+	loadTextures();
+
+	// Create Mesh objects
+	initSceneObjects();
+
+	// Create shader objects
+	initShaders(hwnd);
+
+	// Initialise light
+	initLights();
+
+	// Initialise camera
+	initCam();
+
+	// Init all the variables used by the GUI
+	initGUIVars();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void App1::loadTextures()
+{
+	textureMgr->loadTexture(L"brick", L"resources/textures/snow.png");
+	textureMgr->loadTexture(L"grass", L"resources/textures/grass.png");
+	textureMgr->loadTexture(L"sand", L"resources/textures/sand.png");
+	textureMgr->loadTexture(L"water", L"resources/textures/water.png");
+	textureMgr->loadTexture(L"bark", L"resources/textures/bark.png");
+	textureMgr->loadTexture(L"leaf", L"resources/textures/leaf.png");
+	/*textureMgr->loadTexture(L"goldLeaf", L"resources/textures/golden_leaf.png");
+	textureMgr->loadTexture(L"goldBark", L"resources/textures/golden_bark.png");*/
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void App1::initSceneObjects()
+{
+	terrainMesh = new Terrain(renderer->getDevice(), renderer->getDeviceContext(), 512);		// Remember this is res NOT size, size is set in terrain.h
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void App1::initShaders(HWND& hwnd)
+{
+	terrainShader = new TerrainShader(renderer->getDevice(), hwnd);
+	leafShader = new LeafShader(renderer->getDevice(), hwnd);
+	lightShader = new LightShader(renderer->getDevice(), hwnd);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void App1::initLights()
+{
+	initDirLight();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void App1::initDirLight()
+{
+	dirLight = new Light();
+	dirLight->setAmbientColour(0.2f, 0.2f, 0.2f, 1.0f);
+	dirLight->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
+	dirLight->setDirection(0.7f, -0.7f, 0.0f);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void App1::initCam()
+{
+	camera->setPosition(-259.91f, 167.86f, -237.27f);
+	camera->setRotation(23.00f, 33.25f, 0.00f);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void App1::initGUIVars()
+{
+	// BOOLS
+	buildingFullTerrain = false;
+
+	// For Smoothing
+	loopSmoothing = false;
+	runSmoothingIterations = false;
+	smoothingValsSet = false;
+
+	// For Faulting
+	loopFaulting = false;
+	runFaultingIterations = false;
+
+	// For Particle Depo
+	loopParticleDepo = false;
+	runParticleDepoIterations = false;
+
+	// For Perlin Noise and fBm
+	newRandomNoise = false;
+	addFixedNoise = false;
+	ridgedPerlinToggle = false;
+	terracedPerlinToggle = false;
+	fBmToggle = false;
+	fBmValsSet = false;
+	runSingleOctave = false;
+	runAllOctaves = false;
+
+	// For Hydr Eros
+	haveEroded = false;
+
+	// INTS
+	terrainResolution = 512;
+	faultingIterations = 0;
+	smoothingIterations = 0;
+	particleDepoIterations = 0;
+	fBmOctaves = 0;
+
+	// FLOATS
+	perlinFreq = 0.2f;
+	perlinScale = 0.2f;
+	amplitude = 5.0f;
+
+	N_waterLowerBound = 0.0f;
+	N_waterUpperbound = 3.0f;
+	N_grassLowerBound = 3.0f;
+	N_grassUpperBound = 7.0f;
+
+	R_waterLowerBound = -15.0f;
+	R_waterUpperbound = -5.0f;
+	R_grassLowerBound = -5.0f;
+	R_grassUpperBound = -0.5f;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void App1::updateTerrain()
 {
 	checkPerlinNoise();
@@ -63,6 +199,8 @@ void App1::updateTerrain()
 	checkSmoothing();
 	checkParticleDepo();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void App1::checkFaulting()
 {
@@ -86,6 +224,8 @@ void App1::checkFaulting()
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void App1::checkSmoothing()
 {
 	if (runSmoothingIterations && smoothingIterations > 0)
@@ -102,6 +242,8 @@ void App1::checkSmoothing()
 		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void App1::checkParticleDepo()
 {
@@ -123,6 +265,8 @@ void App1::checkParticleDepo()
 		}
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void App1::checkPerlinNoise()
 {
@@ -195,13 +339,10 @@ void App1::checkPerlinNoise()
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void App1::buildLSystem()
 {
-	// Clear any lines we might already have
-
-	m_CylinderList.clear();
-	leafList.clear();
-
 	//Get the current L-System string, right now we have a place holder
 	std::string systemString = l_System.GetCurrentSystem();
 
@@ -223,6 +364,8 @@ void App1::buildLSystem()
 		}
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void App1::buildCyl3DTree(char letter, XMVECTOR& pos, XMVECTOR& dir, XMVECTOR& up, XMVECTOR& fwd, XMVECTOR& left, XMMATRIX& currRot)
 {
@@ -295,6 +438,8 @@ void App1::buildCyl3DTree(char letter, XMVECTOR& pos, XMVECTOR& dir, XMVECTOR& u
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void App1::addCylinder(XMVECTOR& pos, XMMATRIX& currRot, XMVECTOR branchLen, float btmRadius, float topRadius)
 {
 	float len = XMVectorGetX(XMVector3Length(branchLen));
@@ -303,6 +448,8 @@ void App1::addCylinder(XMVECTOR& pos, XMMATRIX& currRot, XMVECTOR branchLen, flo
 	m_Cylinder->m_Transform = currRot * XMMatrixTranslationFromVector(pos);
 	m_CylinderList.push_back(m_Cylinder);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void App1::addLeaf(XMVECTOR& pos, XMMATRIX& currRot)
 {
@@ -314,14 +461,31 @@ void App1::addLeaf(XMVECTOR& pos, XMMATRIX& currRot)
 	leafList.push_back(quadLeaf);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void App1::resetLSystem()
 {
 	iterations = 0;
 	branchLengthMult = 1.0f;
 	l_System.Reset();
+
+	for (int i = 0; i < m_CylinderList.size(); ++i)
+	{
+		delete m_CylinderList[i];
+		m_CylinderList[i] = nullptr;
+	}
+
+	for (int i = 0; i < leafList.size(); ++i)
+	{
+		delete leafList[i];
+		leafList[i] = nullptr;
+	}
+
 	m_CylinderList.clear();
 	leafList.clear();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool App1::frame()
 {
@@ -346,6 +510,8 @@ bool App1::frame()
 
 	return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool App1::render()
 {
@@ -373,6 +539,8 @@ bool App1::render()
 
 	return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void App1::renderTerrain()
 {
@@ -402,6 +570,8 @@ void App1::renderTerrain()
 	worldMatrix = XMMatrixIdentity();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void App1::renderLSystem()
 {
 	// FOR CYL TREE
@@ -413,7 +583,8 @@ void App1::renderLSystem()
 			worldMatrix *= XMMatrixScaling(20.0f, 20.0f, 20.0f);
 
 			m_CylinderList[i]->sendData(renderer->getDeviceContext());
-			lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"goldBark"), dirLight);		
+			lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"bark"), dirLight);
+			//lightShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"goldBark"), dirLight);
 			lightShader->render(renderer->getDeviceContext(), m_CylinderList[i]->getIndexCount());
 
 			worldMatrix = XMMatrixIdentity();
@@ -431,7 +602,8 @@ void App1::renderLSystem()
 				worldMatrix *= XMMatrixScaling(20.0f, 20.0f, 20.0f);
 
 				leafList[i]->sendData(renderer->getDeviceContext());
-				leafShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"goldLeaf"), dirLight);				
+				leafShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"leaf"), dirLight);				
+				//leafShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"goldLeaf"), dirLight);				
 				leafShader->render(renderer->getDeviceContext(), leafList[i]->getIndexCount());
 
 				worldMatrix = XMMatrixIdentity();
@@ -440,6 +612,8 @@ void App1::renderLSystem()
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void App1::gui()
 {
 	// Force turn off unnecessary shader stages.
@@ -447,18 +621,18 @@ void App1::gui()
 	renderer->getDeviceContext()->HSSetShader(NULL, NULL, 0);
 	renderer->getDeviceContext()->DSSetShader(NULL, NULL, 0);
 
-	ImGui::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
 
 	// Build UI
 	ImGui::Text("FPS: %.2f", timer->getFPS());
-	ImGui::Text("Terrain Resolution: %d", 512);
+	ImGui::Text("Terrain Resolution: %d", terrainMesh->getTerrainRes());
 	ImGui::Text("Camera Pos: (%.2f, %.2f, %.2f)", camera->getPosition().x, camera->getPosition().y, camera->getPosition().z);
 	ImGui::Text("Camera Rot: (%.2f, %.2f, %.2f)", camera->getRotation().x, camera->getRotation().y, camera->getRotation().z);
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
 	//ImGui::SliderInt("Terrain Resolution", &terrainResolution, 512, 1024);
 
 	// Resize the terrain to a new resolution
-	if (ImGui::Button("Resize Terrain"))
+	/*if (ImGui::Button("Resize Terrain"))
 	{
 		if (terrainResolution != terrainMesh->getTerrainRes())
 		{
@@ -466,7 +640,7 @@ void App1::gui()
 			terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 			terrainMesh->updateHeightMap();
 		}
-	}
+	}*/
 
 	// Get a brand new flat terrain
 	if (ImGui::Button("Reset Terrain"))
@@ -483,151 +657,25 @@ void App1::gui()
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 }
 
-void App1::loadTextures()
-{
-	textureMgr->loadTexture(L"brick", L"resources/textures/snow.png");
-	textureMgr->loadTexture(L"grass", L"resources/textures/grass.png");
-	textureMgr->loadTexture(L"sand", L"resources/textures/sand.png");
-	textureMgr->loadTexture(L"water", L"resources/textures/water.png");
-	/*textureMgr->loadTexture(L"bark", L"resources/textures/bark.png");
-	textureMgr->loadTexture(L"leaf", L"resources/textures/leaf.png");*/
-	textureMgr->loadTexture(L"goldLeaf", L"resources/textures/golden_leaf.png");
-	textureMgr->loadTexture(L"goldBark", L"resources/textures/golden_bark.png");
-}
-
-void App1::initSceneObjects()
-{
-	terrainMesh = new Terrain(renderer->getDevice(), renderer->getDeviceContext(), 512);		// Remember this is res NOT size, size is set in terrain.h
-	m_Cylinder = nullptr;
-	quadLeaf = nullptr;
-}
-
-void App1::initShaders(HWND& hwnd)
-{
-	terrainShader = new TerrainShader(renderer->getDevice(), hwnd);
-	leafShader = new LeafShader(renderer->getDevice(), hwnd);
-	lightShader = new LightShader(renderer->getDevice(), hwnd);	
-}
-
-void App1::initLights()
-{
-	initDirLight();
-}
-
-void App1::initDirLight()
-{
-	dirLight = new Light();
-	dirLight->setAmbientColour(0.2f, 0.2f, 0.2f, 1.0f);
-	dirLight->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
-	dirLight->setDirection(0.7f, -0.7f, 0.0f);
-}
-
-void App1::initCam()
-{
-	camera->setPosition(-259.91f, 167.86f, -237.27f);
-	camera->setRotation(23.00f, 33.25f, 0.00f);
-}
-
-void App1::initGUIVars()
-{
-	// Bools
-	buildingFullTerrain = false;
-	// For Smoothing
-	loopSmoothing = false;
-	runSmoothingIterations = false;
-
-	// For Faulting
-	loopFaulting = false;
-	runFaultingIterations = false;
-
-	// For Particle Depo
-	loopParticleDepo = false;
-	runParticleDepoIterations = false;
-
-	// For Perlin Noise and fBm
-	newRandomNoise = false;
-	addFixedNoise = false;
-	ridgedPerlinToggle = false;
-	terracedPerlinToggle = false;
-	fBmToggle = false;
-	runSingleOctave = false;
-	runAllOctaves = false;
-
-	// Ints
-	terrainResolution = 512;
-	faultingIterations = 0;
-	smoothingIterations = 0;
-	particleDepoIterations = 0;
-	fBmOctaves = 0;
-
-	// Floats
-	perlinFreq = 0.2f;
-	perlinScale = 0.2f;
-	amplitude = 5.0f;
-
-	N_waterLowerBound = 0.0f;
-	N_waterUpperbound = 3.0f;
-	N_grassLowerBound = 3.0f;
-	N_grassUpperBound = 7.0f;
-
-	R_waterLowerBound = -15.0f;
-	R_waterUpperbound = -5.0f;
-	R_grassLowerBound = -5.0f;
-	R_grassUpperBound = -0.5f;
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void App1::buildAllGuiOptions()
 {
 	if (ImGui::TreeNode("Hydraulic Erosion"))
 	{
-		ImGui::Text("You Must Build A Terrain First!");
-		ImGui::Text("Hydralic Erosion works with Normal and Terraced Terrains ONLY! NOT Ridged!");
-
-		ImGui::Text("Change these values to change the look of the erosion");
-
-		ImGui::SliderInt("Cycles", &erosionIterations, 250000, 500000);
-		ImGui::SliderInt("Erosion Radius", &erosionRadius, 3.0, 10.0);
-		ImGui::SliderFloat("Inertia", &inertia, 0.001, 0.999);
-		ImGui::SliderFloat("Sediment Capacity", &sedimentCapacity, 1.0, 5.0);
-		ImGui::SliderFloat("Erosion Speed", &erodeSpeed, 0.001, 10.0);
-		ImGui::SliderFloat("Deposition Speed", &depositSpeed, 0.001, 3.0);
-		ImGui::SliderFloat("Water Evaporation Speed", &evaporateSpeed, 0.001, 1.0);
-		ImGui::SliderFloat("Gravity", &gravity, 4.0, 10.0);
-		ImGui::SliderInt("Max Particle Lifetime", &maxDropletLifetime, 20, 50);
-
-		terrainMesh->setErosionRad(erosionRadius);
-		terrainMesh->setInertia(inertia);
-		terrainMesh->setSedimentCap(sedimentCapacity);
-		terrainMesh->setErosionSpeed(erodeSpeed);
-		terrainMesh->setDepositSpeed(depositSpeed);
-		terrainMesh->setEvapSpeed(evaporateSpeed);
-		terrainMesh->setGravity(gravity);
-		terrainMesh->setMaxParticleLifetime(maxDropletLifetime);
-
-		if (ImGui::Button("Erode Terrain"))
-		{
-			ImGui::Text("Please Wait...");
-			terrainMesh->erodeTerrain(erosionIterations);
-			terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
-
-			// Hard set the texture bounds for a textured terrain with white shorelines to imitate sea foam
-			N_waterLowerBound = 1.983f;
-			N_waterUpperbound = 3.0f;		// Swap this value with the next to remove the white shorelines
-			N_grassLowerBound = 0.0f;
-			N_grassUpperBound = 20.0f;
-		}
+		buildHydErosionGui();
 
 		ImGui::TreePop();
 	}
 	
 	if (ImGui::TreeNode("Build Complete Terrain"))
 	{
-		buildCompleteTerrain();
+		buildCompleteTerrainGui();
 
 		ImGui::TreePop();
 	}
 
-	if (ImGui::TreeNode("Play with L-System Tree"))
+	if (ImGui::TreeNode("Build L-System Tree"))
 	{
 		buildLSystemGUI();
 
@@ -644,10 +692,54 @@ void App1::buildAllGuiOptions()
 	}
 }
 
-void App1::buildCompleteTerrain()
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void App1::buildHydErosionGui()
 {
-	ImGui::Text("Ensure the Perlin Noise Tree");
-	ImGui::Text("is Open in Terrain Features Below");
+	ImGui::Text("* NOTE *	YOU MUST BUILD A TERRAIN FIRST!");
+	ImGui::Text("* NOTE *	HYDRAULIC EROSION WORKS WITH:");
+	ImGui::Text("			- NORMAL NOISE TERRAIN");
+	ImGui::Text("			- TERRACED NOISE TERRAIN");
+	ImGui::Text(" ");
+	ImGui::Text("Change these values to change the look of the erosion\n");
+
+	ImGui::SliderInt("Cycles", &erosionIterations, 250000, 500000);
+	ImGui::SliderInt("Erosion Radius", &erosionRadius, 2.0, 10.0);
+	ImGui::SliderFloat("Inertia", &inertia, 0.001, 0.999);
+	ImGui::SliderFloat("Sediment Capacity", &sedimentCapacity, 1.0, 5.0);
+	ImGui::SliderFloat("Erosion Speed", &erodeSpeed, 0.001, 0.999);
+	ImGui::SliderFloat("Deposition Speed", &depositSpeed, 0.001, 0.999);
+	ImGui::SliderFloat("Water Evaporation Speed", &evaporateSpeed, 0.001, 0.999);
+	//ImGui::SliderFloat("Gravity", &gravity, 4.0, 10.0);
+	ImGui::SliderInt("Max Particle Lifetime", &maxDropletLifetime, 5, 50);
+
+	terrainMesh->setErosionRad(erosionRadius);
+	terrainMesh->setInertia(inertia);
+	terrainMesh->setSedimentCap(sedimentCapacity);
+	terrainMesh->setErosionSpeed(erodeSpeed);
+	terrainMesh->setDepositSpeed(depositSpeed);
+	terrainMesh->setEvapSpeed(evaporateSpeed);
+	//terrainMesh->setGravity(gravity);
+	terrainMesh->setMaxParticleLifetime(maxDropletLifetime);
+
+	if (ImGui::Button("Erode Terrain"))
+	{
+		ImGui::Text("Please Wait...");
+		terrainMesh->erodeTerrain(erosionIterations);
+		terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
+
+		// Hard set the texture bounds for a textured terrain with white shorelines to imitate sea foam
+		adjustedTextureBounds();
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void App1::buildCompleteTerrainGui()
+{
+	ImGui::Text("* NOTE *	ENSURE PERLIN NOISE TREE IS OPEN IN TERRAIN FEATURES BELOW");
+	ImGui::Text(" ");
+
 	if (ImGui::Button("Build Complete Terrain"))
 	{
 		buildingFullTerrain = true;
@@ -656,10 +748,7 @@ void App1::buildCompleteTerrain()
 		haveEroded = false;
 
 		// Reset the texture bounds to defaults when generating a new terrian
-		N_waterLowerBound = 0.0f;
-		N_waterUpperbound = 3.0f;
-		N_grassLowerBound = 3.0f;
-		N_grassUpperBound = 7.0f;
+		initialTextureBounds();
 
 		// ########################### ADD NOISE ###########################
 		newRandomNoise = true;
@@ -708,16 +797,11 @@ void App1::buildCompleteTerrain()
 			terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
 
 			// Hard set the texture bounds for a textured terrain with white shorelines to imitate sea foam
-			N_waterLowerBound = 1.983f;
-			N_waterUpperbound = 3.0f;		// Swap this value with the next to remove the white shorelines
-			N_grassLowerBound = 0.0f;
-			N_grassUpperBound = 20.0f;
+			adjustedTextureBounds();
 
 			buildingFullTerrain = false;
 		}
 	}
-
-	
 
 	ImGui::Text("Use with Normal or Terraced Noise Height Map");
 	ImGui::SliderFloat("Water Lower Bound", &N_waterLowerBound, -20.0, 20.0);
@@ -731,6 +815,8 @@ void App1::buildCompleteTerrain()
 	ImGui::SliderFloat("Ridged Grass Lower Bound", &R_grassLowerBound, -20.0, 20.0);
 	ImGui::SliderFloat("Ridged Grass Upper Bound", &R_grassUpperBound, -20.0, 100.0);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void App1::buildSmoothingGui()
 {
@@ -746,10 +832,7 @@ void App1::buildSmoothingGui()
 	if (ImGui::Button("Run All Smoothing Iterations"))
 	{
 		// Reset the texture bounds to defaults when generating a new terrian
-		N_waterLowerBound = 0.0f;
-		N_waterUpperbound = 3.0f;
-		N_grassLowerBound = 3.0f;
-		N_grassUpperBound = 7.0f;
+		initialTextureBounds();
 
 		if (!loopSmoothing)
 		{
@@ -762,8 +845,11 @@ void App1::buildSmoothingGui()
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void App1::buildLSystemGUI()
 {
+
 	ImGui::Checkbox("Build 3D Cylinder Tree", &build3DCylTreeToggle);
 	systems["3DCylTree"] = build3DCylTreeToggle;
 
@@ -800,6 +886,8 @@ void App1::buildLSystemGUI()
 	ImGui::TextWrapped(l_System.GetCurrentSystem().c_str());
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void App1::buildFaultingGui()
 {
 	if (ImGui::TreeNode("Faulting"))
@@ -807,10 +895,7 @@ void App1::buildFaultingGui()
 		if (ImGui::Button("Add Single Fault"))
 		{
 			// Reset the texture bounds to defaults when generating a new terrian
-			N_waterLowerBound = 0.0f;
-			N_waterUpperbound = 3.0f;
-			N_grassLowerBound = 3.0f;
-			N_grassUpperBound = 7.0f;
+			initialTextureBounds();
 
 			terrainMesh->generateFault();
 			terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
@@ -830,10 +915,7 @@ void App1::buildFaultingGui()
 			loopFaulting = true;
 
 			// Reset the texture bounds to defaults when generating a new terrian
-			N_waterLowerBound = 0.0f;
-			N_waterUpperbound = 3.0f;
-			N_grassLowerBound = 3.0f;
-			N_grassUpperBound = 7.0f;
+			initialTextureBounds();
 		}
 		else
 		{
@@ -846,10 +928,7 @@ void App1::buildFaultingGui()
 		if (ImGui::Button("Run All Iterations"))
 		{
 			// Reset the texture bounds to defaults when generating a new terrian
-			N_waterLowerBound = 0.0f;
-			N_waterUpperbound = 3.0f;
-			N_grassLowerBound = 3.0f;
-			N_grassUpperBound = 7.0f;
+			initialTextureBounds();
 
 			if (!loopFaulting)					
 			{
@@ -871,6 +950,8 @@ void App1::buildFaultingGui()
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void App1::buildParticleDepoGui()
 {
 	if (ImGui::TreeNode("Particle Deposition"))
@@ -878,10 +959,7 @@ void App1::buildParticleDepoGui()
 		if (ImGui::Button("Add Single Particle"))
 		{
 			// Reset the texture bounds to defaults when generating a new terrian
-			N_waterLowerBound = 0.0f;
-			N_waterUpperbound = 3.0f;
-			N_grassLowerBound = 3.0f;
-			N_grassUpperBound = 7.0f;
+			initialTextureBounds();
 
 			terrainMesh->startParticleDepo();
 			terrainMesh->generateTerrain(renderer->getDevice(), renderer->getDeviceContext());
@@ -899,10 +977,7 @@ void App1::buildParticleDepoGui()
 		if (state)
 		{
 			// Reset the texture bounds to defaults when generating a new terrian
-			N_waterLowerBound = 0.0f;
-			N_waterUpperbound = 3.0f;
-			N_grassLowerBound = 3.0f;
-			N_grassUpperBound = 7.0f;
+			initialTextureBounds();
 
 			loopParticleDepo = true;
 		}
@@ -917,10 +992,7 @@ void App1::buildParticleDepoGui()
 		if (ImGui::Button("Run All Iterations"))
 		{
 			// Reset the texture bounds to defaults when generating a new terrian
-			N_waterLowerBound = 0.0f;
-			N_waterUpperbound = 3.0f;
-			N_grassLowerBound = 3.0f;
-			N_grassUpperBound = 7.0f;
+			initialTextureBounds();
 
 			if (!loopParticleDepo)
 			{
@@ -941,6 +1013,8 @@ void App1::buildParticleDepoGui()
 		ImGui::TreePop();
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void App1::buildPerlinNoiseGui()
 {
@@ -997,10 +1071,7 @@ void App1::buildPerlinNoiseGui()
 		if (ImGui::Button("Add Fixed Noise Using Current Freq/Scale Values"))
 		{
 			// Reset the texture bounds to defaults when generating a new terrian
-			N_waterLowerBound = 0.0f;
-			N_waterUpperbound = 3.0f;
-			N_grassLowerBound = 3.0f;
-			N_grassUpperBound = 7.0f;
+			initialTextureBounds();
 
 			addFixedNoise = true;
 		}
@@ -1013,10 +1084,7 @@ void App1::buildPerlinNoiseGui()
 		if (ImGui::Button("Generate New Random Noise"))
 		{
 			// Reset the texture bounds to defaults when generating a new terrian
-			N_waterLowerBound = 0.0f;
-			N_waterUpperbound = 3.0f;
-			N_grassLowerBound = 3.0f;
-			N_grassUpperBound = 7.0f;
+			initialTextureBounds();
 
 			newRandomNoise = true;
 		}
@@ -1025,15 +1093,13 @@ void App1::buildPerlinNoiseGui()
 
 		// ############################### FRACTIONAL BROWNIAN MOTION STUFF ###############################
 
+		ImGui::Text("Uncheck This Box to Alter Terrain Texture Heights");
 		ImGui::Checkbox("Use fBm", &fBmToggle);
 		
 		if (fBmToggle)
 		{
 			// Reset the texture bounds to defaults when generating a new terrian
-			N_waterLowerBound = 0.0f;
-			N_waterUpperbound = 3.0f;
-			N_grassLowerBound = 3.0f;
-			N_grassUpperBound = 7.0f;
+			initialTextureBounds();
 
 			if (ImGui::Button("Run Single fBm Octave"))
 			{
@@ -1051,3 +1117,25 @@ void App1::buildPerlinNoiseGui()
 		ImGui::TreePop();
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void App1::initialTextureBounds()
+{
+	N_waterLowerBound = 0.0f;
+	N_waterUpperbound = 3.0f;
+	N_grassLowerBound = 3.0f;
+	N_grassUpperBound = 7.0f;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void App1::adjustedTextureBounds()
+{
+	N_waterLowerBound = 1.921f;
+	N_waterUpperbound = 3.0f;
+	N_grassLowerBound = 3.0f;
+	N_grassUpperBound = 15.0f;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

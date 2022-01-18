@@ -1,0 +1,151 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="App1" Collapsed="true">
+    <Position X="3.75" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAQxImhQBHpgoaFwAwCUJh82YAIIDFq9otCAAVMcKWQ=</HashCode>
+      <FileName>App1.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CylinderMesh" Collapsed="true">
+    <Position X="5.5" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIBAAAAACAAAEAAAAAAAAAAAIAAAAAAAAAAAA=</HashCode>
+      <FileName>CylinderMesh.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Faulting" Collapsed="true">
+    <Position X="7.25" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAICAAEAAAEBAAAAAAACAQAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Faulting.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ImprovedPerlin" Collapsed="true">
+    <Position X="9" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAQgAAAIAAAAgAAAAAAAAAASAAAAAAEAAAAAAAAA=</HashCode>
+      <FileName>ImprovedPerlin.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Leaf" Collapsed="true">
+    <Position X="3.75" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIACAAAAAAAAEAAAAAAAAAAAAAAAAGCAAAAAA=</HashCode>
+      <FileName>Leaf.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LeafShader" Collapsed="true">
+    <Position X="5.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AICgAASACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAA=</HashCode>
+      <FileName>LeafShader.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LightShader" Collapsed="true">
+    <Position X="7.25" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AICgAAQACCAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>LightShader.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TerrainShader" Collapsed="true">
+    <Position X="9" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AICgAAQACAAAAAAQAACAAAAAAAAIEAAAAAAAAAAAAAA=</HashCode>
+      <FileName>TerrainShader.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LSystem" Collapsed="true">
+    <Position X="9" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAIAEAAABAAAAgAAAAAJABAAACAAAgAAAAAAgAI=</HashCode>
+      <FileName>LSystem.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="OldPerlinNoise" Collapsed="true">
+    <Position X="3.75" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAIBAAAQAAggAAAAAABAAACABAJMAAAAAIAAAAA=</HashCode>
+      <FileName>OldPerlinNoise.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ParticleDeposition" Collapsed="true">
+    <Position X="5.5" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAEAAAAAAAAAAhACAQAAAgCIAAAAAQAAAAAAE=</HashCode>
+      <FileName>ParticleDeposition.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PerlinNoise" Collapsed="true">
+    <Position X="7.25" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gEAEAAAIEgAIAAAIBAACACA0AASAAAQCAIAAAgTAIIA=</HashCode>
+      <FileName>PerlinNoise.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Smoothing" Collapsed="true">
+    <Position X="9" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAACAACAQAAAAAAAAAAAgAgAEAAA=</HashCode>
+      <FileName>Smoothing.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Terrain" Collapsed="true">
+    <Position X="11.75" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAogAiQEAwBAYEgUBCQAAw0AAAAMFyIgUaxgEICCaA=</HashCode>
+      <FileName>Terrain.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BaseApplication" Collapsed="true">
+    <Position X="3.75" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CISAAAAAAgAAAEEAAAAAAIAAASAAABIAAAAACUAQgAA=</HashCode>
+      <FileName>D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\include\BaseApplication.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BaseMesh" Collapsed="true">
+    <Position X="5.5" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQgAAAABAAAAAABQEAAAAAABAAAAEAAAQAAAAAAAA=</HashCode>
+      <FileName>D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\include\BaseMesh.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BaseShader" Collapsed="true">
+    <Position X="11.75" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIiAAAQBgAAIAAAAEAEhEUgAAAAAAAIAEAAACChQgAA=</HashCode>
+      <FileName>D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\include\BaseShader.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PlaneMesh" Collapsed="true">
+    <Position X="11.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACACAAEAACAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>D:\_Abertay_Uni\_Game_Tech_Degree\Year_3\Semester_1\CMP305_Procedural_Methods\Assessment\Application\CMP_305_Coursework\include\PlaneMesh.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="Coord" Collapsed="true">
+    <Position X="3.75" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARgAQAAAAA=</HashCode>
+      <FileName>Line.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Line" Collapsed="true">
+    <Position X="7.25" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAI=</HashCode>
+      <FileName>Line.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="HeightAndGradient" Collapsed="true">
+    <Position X="5.5" Y="8.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAQAQAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Terrain.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

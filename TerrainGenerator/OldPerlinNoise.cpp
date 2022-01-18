@@ -1,9 +1,26 @@
+/*
+ * This is the Original(Classic) Prelin Noise class it handles:
+ *		- Executing the Original Perlin Noise algorithm
+ *
+ *
+ * Original @author Abertay University.
+ * Updated by @author D. Green.
+ *
+ */
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// INCLUDES
 #include "OldPerlinNoise.h"
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool OldPerlinNoise::start = true;
 int	OldPerlinNoise::perm[B + B + 2];
 float OldPerlinNoise::grad1D[B + B + 2];
 float OldPerlinNoise::grad2D[B + B + 2][2];
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 double OldPerlinNoise::noise1D(double arg)
 {
@@ -39,6 +56,8 @@ double OldPerlinNoise::noise1D(double arg)
 	return lerp(sx, u, v);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 double OldPerlinNoise::noise2D(float vec[2])
 {
 	//The integer left & right x values and the bottom & top y values. These define what "cell" we are in
@@ -47,7 +66,7 @@ double OldPerlinNoise::noise2D(float vec[2])
 	//How far into the current "cell" we are. This is the fractional part of our point.
 	float rx0 = 0.f, rx1 = 0.f, ry0 = 0.f, ry1 = 0.f;
 
-	//We'll store pseudo-random numbers for each corner here, that we'll then use to get a pseudo-random gradient
+	//We'll store pseudo-random numbers for each corner here, we'll then use that to get a pseudo-random gradient
 	int b00 = 0, b10 = 0, b01 = 0, b11 = 0;
 
 	//The easing value along the x and y for our point
@@ -58,7 +77,8 @@ double OldPerlinNoise::noise2D(float vec[2])
 	int i, j;
 
 	//If we've not done this already, build the permutation and gradient lookup tables
-	if (start) {
+	if (start)
+	{
 		start = 0;
 		init();
 	}
@@ -71,7 +91,7 @@ double OldPerlinNoise::noise2D(float vec[2])
 	i = perm[bx0];
 	j = perm[bx1];
 
-	//Use this pseudo-random number to get a pseudo-random number for the four corners
+	//Use this pseudo-random number to get another pseudo-random number for the four corners
 	b00 = perm[i + by0];
 	b10 = perm[j + by0];
 	b01 = perm[i + by1];
@@ -99,6 +119,8 @@ double OldPerlinNoise::noise2D(float vec[2])
 	//The final value is 'a' and 'b' blended together using the vertical easing curve
 	return lerp(sy, a, b);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //This function just sets up a table of numbers which we use for generating a pseudo-random number later
 //and then generates arrays of pseudo-random gradients that we can access using the pseudo-random numbers
@@ -140,6 +162,8 @@ void OldPerlinNoise::init(void)
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //Setup the function variables
 //b0 and b1 are the integer values before and after our point
 //r0 and r1 are the fractional distances from the integer boundaries
@@ -153,6 +177,8 @@ void OldPerlinNoise::setup(float* vec, int i, int& b0, int& b1, float& r0, float
 	r1 = r0 - 1.;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //Function for normalising a 2D vector
 const void OldPerlinNoise::normalize2D(float v[2])
 {
@@ -160,6 +186,8 @@ const void OldPerlinNoise::normalize2D(float v[2])
 	v[0] = v[0] / s;
 	v[1] = v[1] / s;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Function for normalising a 3D vector
 const void OldPerlinNoise::normalize3D(float v[3])
@@ -169,3 +197,5 @@ const void OldPerlinNoise::normalize3D(float v[3])
 	v[1] = v[1] / s;
 	v[2] = v[2] / s;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

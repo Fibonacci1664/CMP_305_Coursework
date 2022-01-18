@@ -1,3 +1,19 @@
+/*
+ * This is the Leaf Shader class it handles:
+ *		- Init the Light buffer
+ *		- Init the matrix buffer
+ *		- Init the texture sampler
+ *		- Init the leaf shader files
+ *
+ *
+ * Original @author Abertay University.
+ * Updated by @author D. Green.
+ * 
+ */
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// INCLUDES
 #include "LeafShader.h"
 
 LeafShader::LeafShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwnd)

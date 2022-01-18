@@ -1,8 +1,26 @@
-// Main.cpp
+/*
+ * THIS WAS CREATED USING VISUAL STUDIO COMMUNITY EDITION - VERSION 16.11.6
+ * AND DirectX 11
+ */
+
+ /*
+  * This is the main point of entry for the program and handles
+  *		- Setting the applications window size.
+  *     - Creating and running the Application
+  *
+  * Original @author Abertay University.
+  *	Updated by @author D. Green.
+  */
+
+ ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ // INCLUDES
 #include <cstdlib>
 #include <ctime>
 #include "System.h"
 #include "App1.h"
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
 {
@@ -23,3 +41,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline,
 
 	return 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

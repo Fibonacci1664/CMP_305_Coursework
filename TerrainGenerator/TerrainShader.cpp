@@ -1,5 +1,25 @@
+/*
+ * This is the Terrain Shader class it handles:
+ *		- Init the Light buffer
+ *		- Init the matrix buffer
+ *		- Init the texture sampler
+ *		- Init a texture bounds buffer used for blending textures
+ *		- Init a noise type buffer used to determine which type of noise is being generated
+ *
+ *
+ * Original @author Abertay University.
+ * Updated by @author D. Green.
+ *
+ */
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// INCLUDES
 #include "TerrainShader.h"
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// CONSTRUCTOR / DESTRUCTOR
 TerrainShader::TerrainShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwnd)
 {
 	initShader(L"terrain_vs.cso", L"terrain_ps.cso");
@@ -20,6 +40,18 @@ TerrainShader::~TerrainShader()
 		matrixBuffer->Release();
 		matrixBuffer = 0;
 	}
+	
+	if (noiseStyleBuffer)
+	{
+		noiseStyleBuffer->Release();
+		noiseStyleBuffer = 0;
+	}
+	
+	if (texturingBoundsBuffer)
+	{
+		texturingBoundsBuffer->Release();
+		texturingBoundsBuffer = 0;
+	}
 
 	// Release the layout.
 	if (layout)
@@ -39,6 +71,9 @@ TerrainShader::~TerrainShader()
 	BaseShader::~BaseShader();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// FUNCTIONS
 void TerrainShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilename)
 {
 	D3D11_BUFFER_DESC matrixBufferDesc;
@@ -101,6 +136,7 @@ void TerrainShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilen
 	renderer->CreateBuffer(&lightBufferDesc, NULL, &texturingBoundsBuffer);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	const XMMATRIX &worldMatrix,
@@ -172,3 +208,5 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	deviceContext->PSSetShaderResources(2, 1, &texture3);
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

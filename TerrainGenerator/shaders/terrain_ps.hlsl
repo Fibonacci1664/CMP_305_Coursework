@@ -52,6 +52,11 @@ float4 calculateLighting(float3 lightDirection, float3 normal, float4 diffuse)
 
 float4 doNormalHeightTexturing(float height, float4 snowTexCol, float4 grassTexCol, float4 waterTexCol, float4 lightCol)
 {
+    // https://rosettacode.org/wiki/Map_range
+    
+    // t = b1 + (s - a1) * (b2 - b1) / (a2 - a1)
+    // Where s = the height of our current pixel
+    
     float4 blendTex = 0.0f;
     float lowerBound = 0.0f;        // a1
     float upperBound = 0.0f;        // a2

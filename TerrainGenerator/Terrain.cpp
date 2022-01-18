@@ -1,10 +1,26 @@
+/*
+ * This is the terrain class, it handles:
+ *		- Generating the terrain mesh
+ *		- Regenerating the terrain mesh after modifications
+ *		- Setting up the terrain mesh buffers
+ *		- Passing information from the App class to respective terrain features classes
+ *		- Running the Hydraulic Erosion algorithm
+ *
+ * Original @author Abertay University.
+ * Updated by @author D. Green.
+ *
+ */
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// INCLUDES
 #include "Terrain.h"
 #include "Particle.h"
 #include <algorithm>
 
-//int erosionBrushIndices[][];
-//float erosionBrushWeights[][];
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// CONSTRUCTOR / DESTRUCTOR
 Terrain::Terrain(ID3D11Device* device, ID3D11DeviceContext* deviceContext, int resolution) :
 	PlaneMesh(device, deviceContext, resolution)
 {
@@ -41,10 +57,15 @@ Terrain::~Terrain()
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// FUNCTIONS
 void Terrain::resetTerrain()
 {
 	newTerrain = true;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Terrain::initTerrain(int& resolution, ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 {
@@ -55,6 +76,8 @@ void Terrain::initTerrain(int& resolution, ID3D11Device* device, ID3D11DeviceCon
 	initTerrainObjects();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Terrain::initTerrainObjects()
 {
 	faulting = new Faulting(resolution, heightMap);
@@ -62,6 +85,8 @@ void Terrain::initTerrainObjects()
 	perlinNoise = new PerlinNoise(resolution, heightMap, terrainSize);
 	smoothing = new Smoothing(resolution, heightMap, terrainSize);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Terrain::resize(int& newResolution)
 {
@@ -83,6 +108,8 @@ void Terrain::resize(int& newResolution)
 	vertexBuffer = NULL;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Terrain::updateHeightMap()
 {
 	faulting->updateHeightMap(heightMap);
@@ -90,10 +117,12 @@ void Terrain::updateHeightMap()
 	perlinNoise->updateHeightMap(heightMap);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // Generate all the vertices and indice in our terrain
 void Terrain::generateTerrain(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 {
-	//VertexType* vertices;
+	VertexType* vertices;
 	unsigned long* indices;
 	int index, i, j;
 	float positionX, height, positionZ, u, v, increment;
@@ -288,6 +317,8 @@ void Terrain::generateTerrain(ID3D11Device* device, ID3D11DeviceContext* deviceC
 	indices = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Terrain::buildTerrain()
 {
 	// Build a new terrain with 0 height values
@@ -305,6 +336,8 @@ void Terrain::buildTerrain()
 		}
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Create the vertex and index buffers that will be passed along to the graphics card for rendering
 void Terrain::createBuffers(ID3D11Device* device, VertexType* vertices, unsigned long* indices)
@@ -342,12 +375,28 @@ void Terrain::createBuffers(ID3D11Device* device, VertexType* vertices, unsigned
 	device->CreateBuffer(&indexBufferDesc, &indexData, &indexBuffer);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // ###################### GENERATE TERRAIN EFFECTS ######################
 
 void Terrain::erodeTerrain(int cycles)
 {
+	// Ref:
 	// https://www.firespark.de/resources/downloads/implementation%20of%20a%20methode%20for%20hydraulic%20erosion.pdf
-	// TRY AGAIN!
+	// https://github.com/SebLague/Hydraulic-Erosion
+	// http://ranmantaru.com/blog/2011/10/08/water-erosion-on-heightmap-terrain/
+
+	// Ref:
+	// Laugue, S (2019), Hydraulic-Erosion Version(Unknown) [Source code]. https://github.com/SebLague/Hydraulic-Erosion
+
+	/*
+	* The following was built using the above links, it mostly follows the
+	* first pdf paper, which is also the source for the second link.
+	* The third link is similar in nature again in using the droplet method
+	* This code has been adapted, modified, and updated by me, and in places,
+	* to best suit the needs of the application and the aesthetics. 
+	* 
+	 */
 
 	int currentErosionRadius = 0;
 
@@ -367,8 +416,8 @@ void Terrain::erodeTerrain(int cycles)
 		float posZ = initialRandZPos;
 		float dirX = 0;
 		float dirZ = 0;
-		float speed = 1.0f;
-		float waterVolume = 1.0f; // This is part of the particle
+		//float speed = 1.0f;
+		float waterVolume = 1.0f;
 		float sedimentCarried = 0;
 
 		for (int lifetime = 0; lifetime < maxDropletLifetime; lifetime++)
@@ -379,20 +428,19 @@ void Terrain::erodeTerrain(int cycles)
 
 			// Calculate droplet's offset inside the cell (0,0) = at NW node, (1,1) = at SE node
 			float cellOffsetX = posX - nodeX;
-			float cellOffsetY = posZ - nodeZ;
+			float cellOffsetZ = posZ - nodeZ;
 
 			// Calculate droplet's height and direction of flow with bilinear interpolation of surrounding heights
 			HeightAndGradient heightAndGradient = calculateHeightAndGradient(heightMap, resolution, posX, posZ);
 
-			// Update the droplet's direction and position (move position 1 unit regardless of speed)
-			dirX = (dirX * inertia - heightAndGradient.gradientX * (1 - inertia));
-			dirZ = (dirZ * inertia - heightAndGradient.gradientZ * (1 - inertia));
+			// Update the droplet's direction
+			dirX = ((dirX * inertia) - (heightAndGradient.gradientX * (1 - inertia)));
+			dirZ = ((dirZ * inertia) - (heightAndGradient.gradientZ * (1 - inertia)));
 
-			// Normalize direction
 			float sum = dirX * dirX + dirZ * dirZ;
 			float len = sqrt(sum);
 
-			// If the new direction is below tiny threshold value, i.e. almost flat surface
+			// If the new direction value is below tiny threshold value, i.e. almost flat surface
 			if (len <= FLT_EPSILON)
 			{
 				// Pick random direction
@@ -402,23 +450,18 @@ void Terrain::erodeTerrain(int cycles)
 				float random = range * ((((float)rand()) / (float)RAND_MAX)) + MIN_RAND;
 				dirX = cosf(random);
 				dirZ = sinf(random);
-				//++randomDirs;
 			}
 
+			// Normalize direction
 			dirX /= len;
 			dirZ /= len;
 
-			/*if (len != 0)
-			{
-				dirX /= len;
-				dirZ /= len;
-			}*/
-
+			// Update the droplets position
 			posX += dirX;
 			posZ += dirZ;
 
-			// Stop simulating droplet if it's not moving or has flowed over edge of map
-			if ((dirX == 0 && dirZ == 0) || posX < 0 || posX >= resolution - 1 || posZ < 0 || posZ >= resolution - 1)
+			// Stop simulating droplet has flowed over edge of map
+			if (posX < 0 || posX >= resolution - 1 || posZ < 0 || posZ >= resolution - 1)
 			{
 				break;
 			}
@@ -426,6 +469,10 @@ void Terrain::erodeTerrain(int cycles)
 			// Find the droplet's new height and calculate the deltaHeight
 			float newHeight = calculateHeightAndGradient(heightMap, resolution, posX, posZ).height;
 			float deltaHeight = newHeight - heightAndGradient.height;
+
+			// Calculated new sediment capacity, This is not done as it does not produce the correct aesthetics if included
+			//sedimentCapacity = fmax(-deltaHeight, minSedimentCapacity) * speed * waterVolume * sedimentCapacity;		// Hans Beyer
+			//sedimentCapacity = fmax(-deltaHeight * speed * waterVolume * sedimentCapacity, minSedimentCapacity);		// Lague
 
 			// If the change in height is positive, i.e. we moved 'uphill' then we deposit some sediment
 			// in the pit the particle just ran through.
@@ -450,27 +497,36 @@ void Terrain::erodeTerrain(int cycles)
 
 				// Add the sediment to the four nodes of the current cell using bilinear interpolation
 				// Deposition is not distributed over a radius (like erosion) so that it can fill small pits
-				heightMap[dropletIndex] += amountToDeposit * (1 - cellOffsetX) * (1 - cellOffsetY);
-				heightMap[dropletIndex + 1] += amountToDeposit * cellOffsetX * (1 - cellOffsetY);
-				heightMap[dropletIndex + resolution] += amountToDeposit * (1 - cellOffsetX) * cellOffsetY;
-				heightMap[dropletIndex + resolution + 1] += amountToDeposit * cellOffsetX * cellOffsetY;
+
+				// Current vertex
+				heightMap[dropletIndex] += amountToDeposit * (1 - cellOffsetX) * (1 - cellOffsetZ);
+
+				// Boundary checks on the other 3 surrounding the above vertex location
+				if (nodeX < (resolution - 1))
+				{
+					heightMap[dropletIndex + 1] += amountToDeposit * cellOffsetX * (1 - cellOffsetZ);
+				}
+
+				if (nodeZ < (resolution - 1))
+				{
+					heightMap[dropletIndex + resolution] += amountToDeposit * (1 - cellOffsetX) * cellOffsetZ;
+				}
+
+				if (nodeX < (resolution - 1) && nodeZ < (resolution - 1))
+				{
+					heightMap[dropletIndex + resolution + 1] += amountToDeposit * cellOffsetX * cellOffsetZ;
+				}				
 			}
 			else		// We moved downhill	-	EROSION
 			{
-				// So we now need to collect sediment into the particle, thus eroding some from the map
-				// c = max(?hdif , pminSlope) · vel · water · pcapacity
-
-				// Calculated new sediment capacity?
-				//sedimentCapacity = fmax(-deltaHeight, minSedimentCapacity) * erodeSpeed * waterVolume * sedimentCapacity;
-
 				// Erode a fraction of the droplet's current carry capacity.
-				// Clamp the erosion to the change in height so that it doesn't dig a hole in the terrain behind the droplet
-				// The final value of this should NEVER be more than the height diff between old position and new position, i.e deltaHeight
 				float amountToErode = 0;
 
 				// As long as we've not gone over capacity, calculate a new amount of erosion
 				if (sedimentCarried < sedimentCapacity)
 				{
+					// Clamp the erosion to the change in height so that it doesn't dig a hole in the terrain behind the droplet
+					// The final value of this should NEVER be more than the height diff between old position and new position, i.e deltaHeight
 					float resultantSediment = (sedimentCapacity - sedimentCarried) * erodeSpeed;
 					amountToErode = fmin(resultantSediment, -deltaHeight);
 				}
@@ -485,8 +541,27 @@ void Terrain::erodeTerrain(int cycles)
 						continue;
 					}
 
-					float weighedErodeAmount = amountToErode * erosionBrushWeightsVec[dropletIndex][brushPointIndex];
-					float deltaSediment = (heightMap[nodeIndex] < weighedErodeAmount) ? heightMap[nodeIndex] : weighedErodeAmount;
+					float weightedErodeAmount = amountToErode * erosionBrushWeightsVec[dropletIndex][brushPointIndex];
+
+					float deltaSediment = 0;
+
+					// ## THIS ##
+					// Comment this out if you do not want the "sea level" texture to be flattened out
+					if (heightMap[nodeIndex] < weightedErodeAmount)
+					{
+						deltaSediment = heightMap[nodeIndex];
+					}
+					else
+					{
+						deltaSediment = weightedErodeAmount;
+					}
+
+					//float deltaSediment = (heightMap[nodeIndex] < weightedErodeAmount) ? heightMap[nodeIndex] : weightedErodeAmount;
+
+					// ## OR THIS ## // ## BUT NOT BOTH ##
+					// Uncomment this wish to have the aesthetics of seeing "through" the "sea level water" to the rocky sea bed
+					//float deltaSediment = weightedErodeAmount;
+
 					heightMap[nodeIndex] -= deltaSediment;
 					sedimentCarried += deltaSediment;
 				}
@@ -495,11 +570,23 @@ void Terrain::erodeTerrain(int cycles)
 			// Update droplet's speed and water content
 			// This can be +/- to represent when the particle may be flowing up/downhill
 			// with either a pos/neg vel
-			speed = speed * speed + deltaHeight * gravity;
+			//speed = speed * speed + deltaHeight * gravity;
+
+			// This is what the paper has - Hans Beyer
+			//speed = sqrt(speed * speed + deltaHeight * gravity);
+			
 			waterVolume *= (1 - evaporateSpeed);
+
+			// If the water has all but evaporated, stop iterating on this particle
+			if (waterVolume <= 0.0001)
+			{
+				break;
+			}
 		}
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 HeightAndGradient Terrain::calculateHeightAndGradient(float heightMap[], int mapSize, float posX, float posZ)
 {
@@ -529,10 +616,26 @@ HeightAndGradient Terrain::calculateHeightAndGradient(float heightMap[], int map
 
 	// Calculate heights of the four nodes of the droplet's cell
 	int nodeIndexNW = coordZ * mapSize + coordX;
+
 	float heightNW = heightMap[nodeIndexNW];
-	float heightNE = heightMap[nodeIndexNW + 1];
-	float heightSW = heightMap[nodeIndexNW + mapSize];
-	float heightSE = heightMap[nodeIndexNW + mapSize + 1];
+	float heightNE = 0;
+	float heightSW = 0;
+	float heightSE = 0;
+
+	if (coordX < (resolution - 1))
+	{
+		heightNE = heightMap[nodeIndexNW + 1];
+	}
+
+	if (coordZ < (resolution - 1))
+	{
+		heightSW = heightMap[nodeIndexNW + mapSize];
+	}
+
+	if (coordX < (resolution - 1) && coordZ < (resolution - 1))
+	{
+		heightSE = heightMap[nodeIndexNW + mapSize + 1];
+	}
 
 	// Calculate droplet's direction of flow with bilinear interpolation of height difference along the edges
 	float gradientX = (heightNE - heightNW) * (1 - zOffset) + (heightSE - heightSW) * zOffset;
@@ -549,10 +652,13 @@ HeightAndGradient Terrain::calculateHeightAndGradient(float heightMap[], int map
 	return heightAndGrad;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Terrain::initializeBrushIndices(int mapSize, int radius)
 {
 	int size = mapSize * mapSize;
 
+	// Set up our containers
 	erosionBrushIndicesVec.resize(size);
 	erosionBrushWeightsVec.resize(size);
 
@@ -565,32 +671,49 @@ void Terrain::initializeBrushIndices(int mapSize, int radius)
 
 	for (int i = 0; i < (mapSize * mapSize); i++)
 	{
+		// Get our x location
 		int centreX = i % mapSize;
+		// Get our z location
 		int centreZ = i / mapSize;
 
+		// This is an optimisation and controls only recalculating the edge cases,
+		// for everything else within the main body of the map we just repopulate
+		// with the known 25 values, meaning this conditional fails and we skip to for loop below
 		if (centreZ <= radius || centreZ >= mapSize - radius || centreX <= radius + 1 || centreX >= mapSize - radius)
 		{
 			weightSum = 0;
 			addIndex = 0;
 
+			// Start from negative radius, i.e. to the top of our current location
+			// Moving through our current location, and outwards again to the bottom
+			// of our current location
 			for (int z = -radius; z <= radius; z++)
 			{
+				// Start from negative radius, i.e. to the left of our current location
+				// Moving through our current location, and outwards again to the right
+				// of our current location
 				for (int x = -radius; x <= radius; x++)
 				{
-					float sqrDst = x * x + z * z;
+					// Get the straight line distance from our location to some point within the radius
+					float straightLineDist = x * x + z * z;
 
-					if (sqrDst < radius * radius)
+					if (straightLineDist < radius * radius)
 					{
 						int coordX = centreX + x;
-						int coordY = centreZ + z;
+						int coordZ = centreZ + z;
 
-						if (coordX >= 0 && coordX < mapSize && coordY >= 0 && coordY < mapSize)
+						// Boundary checks
+						if (coordX >= 0 && coordX < mapSize && coordZ >= 0 && coordZ < mapSize)
 						{
-							float weight = 1 - sqrt(sqrDst) / radius;
+							float weight = 1 - (sqrt(straightLineDist) / radius);
+
+							// Sum the weight so we can normalise later
 							weightSum += weight;
 							weights.push_back(weight);
 							xOffsets.push_back(x);
 							zOffsets.push_back(z);
+
+							// Track how many positions will have weights assigned
 							addIndex++;
 						}
 					}
@@ -600,49 +723,67 @@ void Terrain::initializeBrushIndices(int mapSize, int radius)
 
 		int numEntries = addIndex;
 
-		std::vector<int> tempBrushVec;
+		std::vector<int> tempBrushIndicesVec;
 		std::vector<float> tempWeightsVec;
 
+		// Loop over the number of indices that were tracked
 		for (int j = 0; j < numEntries; j++)
-		{			
-			tempBrushVec.push_back((zOffsets[j] + centreZ) * mapSize + xOffsets[j] + centreX);
+		{
+			// Add the particular vertex index from the map to the vector
+			tempBrushIndicesVec.push_back((zOffsets[j] + centreZ) * mapSize + xOffsets[j] + centreX);
+			// Add the weight that was associated with that vertex position to the weights vector
 			tempWeightsVec.push_back(weights[j] / weightSum);
 		}
 
-		erosionBrushIndicesVec[i] = tempBrushVec;
+		// Copy from temp to actual
+		erosionBrushIndicesVec[i] = tempBrushIndicesVec;
 		erosionBrushWeightsVec[i] = tempWeightsVec;
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Terrain::generateFault()
 {
 	faulting->createFault();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Terrain::startParticleDepo()
 {
 	particleDepo->runParticleDepo();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Terrain::genPerlinNoise()
 {
 	perlinNoise->buildPerlinNoise();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Terrain::generatefBm()
 {
 	perlinNoise->fracBrownianMotion();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Terrain::smoothTerrain()
 {
 	smoothing->smoothTerrain();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 int Terrain::getTerrainRes()
 {
 	return resolution;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Terrain::setPNFreqScaleAmp(float freq, float scale, float amplitude)
 {
@@ -651,67 +792,95 @@ void Terrain::setPNFreqScaleAmp(float freq, float scale, float amplitude)
 	perlinNoise->setAmplitude(amplitude);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Terrain::setPerlinRidged(bool isRidged)
 {
 	perlinNoise->setRidged(isRidged);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Terrain::setPerlinTerraced(bool isTerraced)
 {
 	perlinNoise->setTerraced(isTerraced);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Terrain::setPerlinAlgoType(char type)
 {
 	perlinNoise->setPerlinAlgorithm(type);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 float Terrain::getPerlinFreq()
 {
 	return perlinNoise->getFreq();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 float Terrain::getPerlinAmplitude()
 {
 	return perlinNoise->getAmplitude();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Terrain::setErosionRad(int newRad)
 {
 	erosionRadius = newRad;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Terrain::setInertia(float newInertia)
 {
 	inertia = newInertia;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Terrain::setSedimentCap(float newCapacity)
 {
 	sedimentCapacity = newCapacity;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Terrain::setErosionSpeed(float newErosionSpeed)
 {
 	erodeSpeed = newErosionSpeed;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Terrain::setDepositSpeed(float newDepositSpeed)
 {
 	depositSpeed = newDepositSpeed;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Terrain::setEvapSpeed(float newEvapSpeed)
 {
 	evaporateSpeed = newEvapSpeed;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Terrain::setGravity(float newGravity)
 {
 	gravity = newGravity;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Terrain::setMaxParticleLifetime(int newLifetime)
 {
 	maxDropletLifetime = newLifetime;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

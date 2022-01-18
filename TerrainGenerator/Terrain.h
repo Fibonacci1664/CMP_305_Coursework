@@ -1,6 +1,21 @@
+/*
+ * This is the terrain class, it handles:
+ *		- Generating the terrain mesh
+ *		- Regenerating the terrain mesh after modifications
+ *		- Setting up the terrain mesh buffers
+ *		- Passing information from the App class to respective terrain features classes
+ *		- Running the Hydraulic Erosion algorithm
+ *
+ * Original @author Abertay University.
+ * Updated by @author D. Green.
+ *
+ */
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// INCLUDES
 #pragma once
 #include <string>
-
 #include "PlaneMesh.h"
 #include "Faulting.h"
 #include "ParticleDeposition.h"
@@ -9,12 +24,17 @@
 #include <array>
 #include <vector>
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Used in the Hydraulic Erosion algorithm
 struct HeightAndGradient
 {
 	float height;
 	float gradientX;
 	float gradientZ;
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class Terrain : public PlaneMesh
 {
@@ -75,37 +95,21 @@ private:
 	PerlinNoise* perlinNoise;
 	Smoothing* smoothing;
 
-	// Stuff for hydraulic erosion
-	
-	VertexType* vertices;
-
-	// Erosion Steps
-	bool active = false;
-	int remaining = 200000;
-	int erosionstep = 1000;
-
-	// Particle Properties
-	//float dt = 1.2;
-	float density = 1.0;			// This provides varying amounts of inertia
-	float evapRate = 0.001;
-	float depositionRate = 0.1;
-	float minVol = 0.01;
-	float friction = 0.05;
-
-
-	// Seb L
+	// For Hydr Eros
 	int erosionRadius = 3;
-	float inertia = 0.8f; // At zero, water will instantly change direction to flow downhill. At 1, water will never change direction. 
-	float sedimentCapacity = 3.0f; // Multiplier for how much sediment a droplet can carry
-	float minSedimentCapacity = 0.01f; // Used to prevent carry capacity getting too close to zero on flatter terrain
-	float erodeSpeed = 5.0f;
-	float depositSpeed = 0.1f;
-	float evaporateSpeed = 0.03f;
+	float inertia = 0.5f;					// At zero, water will instantly change direction to flow directly downhill. At 1, water will never change direction. 
+	float sedimentCapacity = 1.1f;			// Multiplier for how much sediment a droplet can carry
+	float minSedimentCapacity = 0.01f;		// Used to prevent carry capacity getting too close to zero on flatter terrain
+	float erodeSpeed = 0.5f;
+	float depositSpeed = 0.012f;
+	float evaporateSpeed = 0.012f;
 	float gravity = 4.0f;
-	int maxDropletLifetime = 35;	// This ensures we do not get 'immortal' particles roaming around
+	int maxDropletLifetime = 30;			// This ensures we do not get 'immortal' particles roaming around
 	//float initialWaterVolume = 1.0f;		// This part of the particle
-	float initialSpeed = 1.0f;
+	//float initialSpeed = 1.0f;
 
 	std::vector<std::vector<int>> erosionBrushIndicesVec;
 	std::vector<std::vector<float>> erosionBrushWeightsVec;
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

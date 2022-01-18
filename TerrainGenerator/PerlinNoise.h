@@ -1,5 +1,24 @@
+/*
+ * This is a custom Perlin Noise class it handles:
+ *		- Calling specific versions of Perlin Noise:
+ *			* Old (Classic) Perlin Noise algorithm
+ *			* Improved PErlin Noise algorithm
+ *		- Modifying the type of noise return to create varieties of noise:
+ *			* Ridged noise
+ *			* Terraced noise
+ *
+ * Original @author D. Green.
+ *
+ * © D. Green. 2022.
+ */
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// INCLUDES
 #pragma once
 #include <string>
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class PerlinNoise
 {
@@ -38,3 +57,5 @@ private:
 	double perlinFreq;
 	double perlinScale;
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

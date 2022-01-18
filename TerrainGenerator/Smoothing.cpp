@@ -1,5 +1,18 @@
+/*
+ * This is a custom smoothing class it handles:
+ *		- Running a Von Neumann neighbourhood smoothing algorithm
+ *
+ * Original @author D. Green.
+ *
+ * © D. Green. 2022.
+ */
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// INCLUDES
 #include "Smoothing.h"
 
+// CONSTRUCTOR / DESTRUCTOR
 Smoothing::Smoothing(int& res, float* heightmp, const int& terrainSize) : resolution(res), heightmap(heightmp), terrainSz(terrainSize)
 {
 
@@ -10,10 +23,13 @@ Smoothing::~Smoothing()
 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// FUNCTIONS
 void Smoothing::smoothTerrain()
 {
 	// Create a temp height map data structure to hold the new avg values.
-	// We need this so that we do NOT change any of the value in the original height map
+	// We need this so that we do NOT change any of the values in the original height map
 	// while we are still operating on it to calculate the avgerages for each index pos
 	// Once all avg values have been calculated and this temp has been populated
 	// Copy the data from this structure back into the original, overwriting the original data
@@ -76,3 +92,5 @@ void Smoothing::smoothTerrain()
 	delete[] tempHeightMap;
 	tempHeightMap = nullptr;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
